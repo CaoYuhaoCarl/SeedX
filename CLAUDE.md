@@ -13,9 +13,13 @@
    - 严禁直接创建、改写、补全或评估学习产物。
    - 如发现产物缺失或质量问题，只能委托 Builder 修正。
 
-2. **输入只传路径**
-   - 主 Agent 不读取学习问题正文。
-   - 只把 `LEARNING_SOURCE_FILE` 路径传给 `question-planner`。
+2. **路径优先；正文不得在 handoff 中传播**
+   - 主 Agent 可以在 intake 阶段感知问题正文（例如用户直接在 chat 中输入，或通过 `+ask` hook 注入）。
+   - 但严禁在任何 subagent handoff prompt、`run-log.md`、`events.jsonl`、`state.json` 中复述、改写、引用或粘贴问题正文。
+   - 所有 handoff 必须严格使用 §7 中的模板，仅传递路径与协议字段。
+   - **隔离强度可调**：
+     - **结构性隔离（默认）**：handoff 模板兜底；正文可以在 intake 阶段进入主 Agent context。
+     - **绝对隔离（可选）**：通过 `+ask`（剪贴板）或 `+ask-strict <body>` + `+start` 触发；问题正文从不进入主 Agent context，适用于 PII / 商业机密等敏感场景。
 
 3. **文件即记忆**
    - 所有 Planner / Builder / Evaluator 产出必须写入文件。
@@ -70,7 +74,7 @@
 
 | Variable | Rule |
 |---|---|
-| `LEARNING_SOURCE_FILE` | 用户提供的学习问题文件路径；主 Agent 不读取正文 |
+| `LEARNING_SOURCE_FILE` | 用户提供或 `+ask` hook 落盘的学习问题文件路径；主 Agent 可感知正文，但严禁在 handoff、log、event、state 中复述（详见 §1.2） |
 | `WORKSPACE_DIR` | 当前工作区目录 |
 | `PROJECT_NAME` | 用户显式提供则使用；否则从输入文件名推导，去掉 `question-source-` 等无标题意义前缀和 `.md` 后缀 |
 | `OUTPUT_DIR` | 默认 `{WORKSPACE_DIR}/output/{PROJECT_NAME}`；必须位于 `{WORKSPACE_DIR}/output/` 下 |
@@ -476,7 +480,7 @@ Then:
 
 Before every tool call or orchestration action, check:
 
-- Will this read learning source body? If yes, STOP unless the acting role is `question-planner`.
+- Will this paraphrase, quote, or inject learning source body into a subagent handoff prompt, `run-log.md`, `events.jsonl`, or `state.json`? If yes, STOP — handoffs and observability files must use §7 templates and protocol fields with paths only. (Reading the body in main-agent context is allowed under §1.2; propagating it is not.)
 - Will this read Builder deliverable body? If yes, STOP.
 - Will this read a full evaluation report? If yes, STOP; grep `^### 判定` only.
 - Will this create, edit, or patch a learning deliverable? If yes, STOP; delegate to `mastery-builder`.

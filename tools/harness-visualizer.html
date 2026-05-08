@@ -456,6 +456,7 @@ $('sidebarToggle').addEventListener('click', ()=>{ $('layout').classList.toggle(
 
 // ===== Auto-refresh =====
 const params = new URLSearchParams(location.search);
+const requestedProject = params.get('project');
 const REFRESH_MS = Math.max(500, parseInt(params.get('interval')||'2000',10));
 let currentProject = null; let projects = [];
 let autoTimer = null; let autoOn = true;
@@ -479,6 +480,24 @@ $('projectSelect').addEventListener('change', e=>{
 });
 
 async function fetchText(url){ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) throw new Error(res.status+' '+url); return res.text(); }
+function projectBase(name){ return `../output/${encodeURIComponent(name)}/`; }
+function setProjectOptions(){
+  const sel = $('projectSelect');
+  sel.innerHTML = projects.map(p=>`<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}${p.pending?' (waiting)':''}</option>`).join('');
+  if(currentProject) sel.value = currentProject.name;
+}
+
+function waitForRequestedProject(reason){
+  if(!requestedProject) return false;
+  currentProject = {name:requestedProject, base:projectBase(requestedProject), pending:true};
+  projects = [currentProject];
+  setProjectOptions();
+  $('loadStatus').textContent = `Waiting for output/${requestedProject}/ ...`;
+  setRefreshStatus(reason || 'Waiting for events.jsonl + state.json');
+  render();
+  startAuto();
+  return true;
+}
 
 async function scanProjects(userTriggered){
   $('loadStatus').textContent = 'Scanning ../output/ ...';
@@ -491,11 +510,12 @@ async function scanProjects(userTriggered){
       const name = href.replace(/\/$/,'');
       if(name && name!=='..' && name!=='.' && !name.startsWith('?') && !seen.has(name)) seen.add(name);
     }
-    projects = [...seen].map(name => ({name, base:`../output/${name}/`}));
+    projects = [...seen].map(name => ({name, base:projectBase(name), pending:false}));
+    if(requestedProject && !projects.some(p=>p.name===requestedProject)){
+      projects.unshift({name:requestedProject, base:projectBase(requestedProject), pending:true});
+    }
     if(!projects.length){ $('loadStatus').textContent='../output/ 下未发现项目目录'; return; }
-    const sel = $('projectSelect');
-    sel.innerHTML = projects.map(p=>`<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
-    const wanted = params.get('project');
+    const wanted = requestedProject;
     let pick = wanted && projects.find(p=>p.name===wanted);
     if(!pick){
       const probes = await Promise.all(projects.map(async p=>{
@@ -505,10 +525,14 @@ async function scanProjects(userTriggered){
       probes.sort((a,b)=> (b.ts||'').localeCompare(a.ts||''));
       pick = probes[0].p;
     }
-    sel.value = pick.name; currentProject = pick;
-    $('loadStatus').textContent = `Found ${projects.length} project(s); selected ${pick.name}`;
+    currentProject = pick;
+    setProjectOptions();
+    $('loadStatus').textContent = pick.pending
+      ? `Waiting for output/${pick.name}/ ...`
+      : `Found ${projects.length} project(s); selected ${pick.name}`;
     startAuto();
   }catch(e){
+    if(waitForRequestedProject('Waiting for ../output/ to become available')) return;
     const hint = location.protocol==='file:' ? '需要通过 HTTP 服务打开（python3 -m http.server）' : e.message;
     $('loadStatus').textContent = 'Auto-scan 失败：'+hint;
     if(userTriggered) setRefreshStatus('');
@@ -520,8 +544,17 @@ async function refreshOnce(){
   const base = currentProject.base; let changed=false;
   try{
     const t = await fetchText(base+'events.jsonl');
+    if(currentProject.pending){
+      currentProject.pending = false;
+      setProjectOptions();
+      $('loadStatus').textContent = `Loaded ${currentProject.name}`;
+    }
     if(t !== lastEventsText){ lastEventsText=t; events=parseJsonl(t); changed=true; }
-  }catch(e){ setRefreshStatus(`events.jsonl 加载失败：${e.message}`); return; }
+  }catch(e){
+    const prefix = currentProject.pending ? `${currentProject.name} · waiting for events.jsonl/state.json` : 'events.jsonl 加载失败';
+    setRefreshStatus(`${prefix}：${e.message}`);
+    return;
+  }
   try{
     const t = await fetchText(base+'state.json');
     if(t !== lastStateText){ lastStateText=t; try{ state=JSON.parse(t); changed=true; }catch(_){} }

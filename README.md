@@ -34,7 +34,36 @@ By default, the system is not bound to any specific user, industry, profession, 
 
 ## Quick Start
 
-Replace the three variables below, then send the prompt to Claude Code:
+### Slash trigger (recommended)
+
+Just type into Claude Code:
+
+```text
++ask <your learning question body>
+```
+
+A `UserPromptSubmit` hook will:
+- Save the question body to `input/questions/question-<timestamp>.md`
+- Inject the path and launch instruction so the orchestrator starts immediately
+- Open Harness Visualizer in the background and wait for this run's `events.jsonl` + `state.json`
+
+Project name and output directory are auto-derived from the filename — nothing else to fill in.
+
+### Strict isolation modes (for sensitive questions)
+
+When the question contains PII, trade secrets, or you want to maximize "main agent never sees the body":
+
+| Trigger | Behavior | UX |
+|---|---|---|
+| `+ask` (copy the body to clipboard first; no inline body) | Read via `pbpaste`, save, and launch | 1 step |
+| `+ask-strict <body>` | Save and block the original message; orchestrator only starts after you send `+start` | 2 steps |
+| `+start [path]` | Launch with explicit path, or the most recent question file | — |
+
+Clipboard and strict modes have the same isolation strength — the body never enters the main agent's context. They differ only in UX. See [CLAUDE.md §1.2](CLAUDE.md) for the isolation contract.
+
+### Manual launch (advanced)
+
+If you want to override the project name or output directory, the legacy prompt still works:
 
 ```text
 Learning question path: {WORKSPACE_DIR}/input/questions/{question-file}.md
@@ -126,7 +155,7 @@ Tasks run in the fixed order `task01 → task02 → task03`. Each task is built 
 
 ## Observability Visualization
 
-v0.2 adds a lightweight observability layer: it does not read learning artifact bodies, only run state.
+v0.2 adds a lightweight observability layer: it does not read learning artifact bodies, only run state. When you start with `+ask` / `+start`, the intake hook opens the panel in the background; the panel waits for and polls this run's `events.jsonl` + `state.json`.
 
 ```bash
 # Open the panel and load events.jsonl + state.json for a project, refreshing every 2 seconds
