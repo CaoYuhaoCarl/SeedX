@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Harness Visualizer</title>
   <style>
+    html{color-scheme:dark}
     :root{
       --bg:#020617; --panel:#0f172a; --line:#1e293b;
       --text:#e5e7eb; --muted:#94a3b8; --dim:#64748b;
@@ -81,6 +82,8 @@
       border:1px solid var(--cyan);color:var(--cyan);
       border-radius:8px;padding:6px 12px;font-size:12px;font-family:inherit}
     .toggle:hover{background:rgba(34,211,238,.18)}
+    .toggle:focus-visible,.btn:focus-visible,select:focus-visible,input:focus-visible{
+      outline:2px solid var(--cyan);outline-offset:2px}
 
     /* ===== Layout ===== */
     .layout{display:grid;grid-template-columns:1fr 0;
@@ -101,11 +104,12 @@
       text-transform:none;letter-spacing:normal;margin-left:8px;font-weight:normal}
     .hint{font-size:10px;color:var(--muted);line-height:1.5}
 
-    /* ===== Architecture (compact horizontal) ===== */
-    .arch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .arch-node{flex:1;min-width:130px;border:1px solid #334155;
-      border-radius:10px;padding:7px 10px;text-align:center;
-      background:rgba(15,23,42,.86);font-size:11px}
+    /* ===== Architecture (communication map) ===== */
+    .arch{display:grid;grid-template-columns:minmax(150px,1fr) minmax(86px,.55fr) minmax(150px,1fr) minmax(86px,.55fr) minmax(150px,1fr) minmax(86px,.55fr) minmax(150px,1fr) minmax(150px,.78fr);
+      align-items:stretch;gap:8px}
+    .arch-node{border:1px solid #334155;
+      border-radius:10px;padding:9px 10px;text-align:center;
+      background:rgba(15,23,42,.86);font-size:11px;min-width:0}
     .arch-node .name{color:#f8fafc}
     .arch-node .sub{color:var(--muted);font-size:9px;margin-top:2px}
     .arch-node.main{border-color:var(--cyan)}
@@ -131,33 +135,62 @@
       0%,100%{box-shadow:0 0 0 0 rgba(167,139,250,0)}
       50%   {box-shadow:0 0 18px 2px rgba(167,139,250,.55)}
     }
-    .arch-arrow{color:#475569;font-size:18px;flex:0 0 auto}
-    .arch-arrow.flow{color:var(--amber);animation:arrow-shift 1.2s ease-in-out infinite}
+    .arch-edge{border:1px dashed #334155;border-radius:10px;background:rgba(2,6,23,.36);
+      color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:3px;padding:7px 5px;min-width:0}
+    .arch-edge .arrow{font-size:16px;line-height:1;color:#64748b}
+    .arch-edge .label{font-size:9px;line-height:1.25;text-align:center;white-space:normal}
+    .arch-edge.flow{border-color:rgba(251,191,36,.55);background:rgba(251,191,36,.06);
+      color:#fde68a;animation:task-glow 2.2s ease-in-out infinite}
+    .arch-edge.flow .arrow{color:var(--amber);animation:arrow-shift 1.2s ease-in-out infinite}
     .arch-loop{color:var(--rose);font-size:11px;padding:5px 11px;
       border:1px dashed rgba(251,113,133,.45);border-radius:999px;
-      background:rgba(251,113,133,.06);flex:0 0 auto}
+      background:rgba(251,113,133,.06);display:flex;align-items:center;justify-content:center;text-align:center}
 
     /* ===== Real-time harness console ===== */
     .live-focus{border-color:rgba(251,191,36,.42);
       background:radial-gradient(circle at 18% 0%,rgba(251,191,36,.10),transparent 34%),
                  linear-gradient(135deg,rgba(15,23,42,.96),rgba(2,6,23,.78))}
-    .live-console{display:grid;grid-template-columns:minmax(260px,.74fr) minmax(320px,.9fr) minmax(420px,1.42fr);
+    .operator-grid{display:grid;grid-template-columns:minmax(560px,1.08fr) minmax(460px,.92fr);
       gap:14px;align-items:stretch}
-    .live-card{border:1px solid #263449;border-radius:14px;padding:13px 14px;background:rgba(2,6,23,.54);
-      min-width:0;position:relative;overflow:hidden;min-height:138px}
-    .live-card.active{border-color:rgba(251,191,36,.62);animation:task-glow 2.2s ease-in-out infinite}
-    .live-card .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:9px}
-    .live-card .v{font-size:20px;color:#f8fafc;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .live-card .sub{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.45;overflow:hidden;text-overflow:ellipsis}
-    .live-role.planner .v{color:var(--violet)}
-    .live-role.builder .v{color:var(--emerald)}
-    .live-role.eval .v{color:var(--amber)}
-    .live-role.main .v{color:var(--cyan)}
+    .mission-card,.prompt-card{border:1px solid #263449;border-radius:14px;padding:13px 14px;
+      background:rgba(2,6,23,.54);min-width:0;position:relative;overflow:hidden}
+    .mission-card{border-color:rgba(251,191,36,.48);animation:task-glow 2.2s ease-in-out infinite}
+    .panel-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:9px}
+    .route-summary{border:1px solid rgba(251,191,36,.32);border-radius:10px;background:rgba(251,191,36,.05);
+      color:#fde68a;font-size:11px;line-height:1.45;padding:8px 10px;margin-bottom:10px}
+    .now-grid{display:grid;grid-template-columns:minmax(112px,.85fr) 36px minmax(176px,1.35fr) 36px minmax(126px,.9fr);
+      gap:8px;align-items:stretch;margin-bottom:12px}
+    .actor{border:1px solid #334155;border-radius:10px;background:rgba(15,23,42,.78);
+      padding:10px;min-width:0;display:flex;flex-direction:column;gap:6px}
+    .actor .eyebrow{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+    .actor .name{font-size:16px;line-height:1.15;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .actor .detail{font-size:11px;line-height:1.42;color:var(--muted);
+      display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .actor.sender{border-color:rgba(34,211,238,.55);background:rgba(34,211,238,.06)}
+    .actor.receiver.planner{border-color:rgba(167,139,250,.7);background:rgba(167,139,250,.08)}
+    .actor.receiver.builder{border-color:rgba(52,211,153,.7);background:rgba(52,211,153,.08)}
+    .actor.receiver.eval{border-color:rgba(251,191,36,.75);background:rgba(251,191,36,.08)}
+    .actor.waiting{border-color:rgba(251,191,36,.56);background:rgba(251,191,36,.06)}
+    .flow-arrow{border:1px dashed rgba(251,191,36,.46);border-radius:10px;min-width:36px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fde68a;
+      background:rgba(251,191,36,.05);font-size:10px;text-align:center;padding:7px 5px}
+    .flow-arrow .arrow{font-size:18px;line-height:1;animation:arrow-shift 1.2s ease-in-out infinite}
+    .flow-arrow .edge-text{display:none}
+    .task-strip{display:grid;grid-template-columns:minmax(160px,.6fr) minmax(260px,1fr);gap:10px;margin-bottom:12px}
+    .task-focus{border:1px solid rgba(251,191,36,.36);border-radius:10px;background:rgba(15,23,42,.58);padding:10px;min-width:0}
+    .task-focus .big{font-size:18px;color:#f8fafc;line-height:1.15;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .task-focus .small{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.45}
+    .packet{border:1px solid rgba(34,211,238,.25);border-radius:10px;background:rgba(2,6,23,.45);
+      padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}
+    .packet-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+    .prompt-card{border-color:rgba(34,211,238,.34);background:rgba(2,6,23,.62);display:flex;flex-direction:column}
+    .prompt-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .prompt-head .title{font-size:12px;text-transform:uppercase;letter-spacing:.9px;color:#f8fafc}
     .live-status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
     .live-badge{font-size:10px;border:1px solid #334155;border-radius:999px;padding:3px 8px;color:#cbd5e1;background:rgba(15,23,42,.6)}
     .live-badge.hot{color:var(--amber);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.08)}
-    .handoff-card{border-color:rgba(34,211,238,.34);background:rgba(2,6,23,.62)}
-    .handoff-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
     .handoff-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
     .handoff-chip{font-size:10px;color:#c4b5fd;background:rgba(139,92,246,.08);
       border:1px solid rgba(167,139,250,.28);border-radius:6px;padding:2px 7px;
@@ -165,7 +198,7 @@
     .handoff-chip.input{color:#bae6fd;border-color:rgba(34,211,238,.28);background:rgba(34,211,238,.06)}
     .handoff-chip.output{color:#bbf7d0;border-color:rgba(52,211,153,.28);background:rgba(52,211,153,.06)}
     .instruction-box{border:1px solid rgba(251,191,36,.26);border-radius:10px;background:#020617;margin-top:9px;
-      padding:10px;max-height:220px;overflow:auto;color:#fde68a;font-size:11px;line-height:1.55;white-space:pre-wrap}
+      padding:10px;min-height:218px;max-height:292px;overflow:auto;color:#fde68a;font-size:11px;line-height:1.55;white-space:pre-wrap}
     .guard-strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
     .guard-chip{font-size:10px;color:#bbf7d0;border:1px solid rgba(52,211,153,.28);border-radius:999px;padding:2px 7px;background:rgba(52,211,153,.06)}
     .live-empty{color:var(--muted);font-size:12px;border:1px dashed #334155;border-radius:12px;padding:12px;background:rgba(2,6,23,.32)}
@@ -317,10 +350,12 @@
     @media(max-width:980px){
       .layout,.layout.open{grid-template-columns:1fr !important}
       aside{border-left:none;border-top:1px solid var(--line)}
-      .arch{flex-direction:column;align-items:stretch}
-      .arch-arrow{transform:rotate(90deg);text-align:center}
-      .live-console{grid-template-columns:1fr}
-      .handoff-grid{grid-template-columns:1fr}
+      .arch{grid-template-columns:1fr}
+      .arch-edge .arrow{transform:rotate(90deg)}
+      .operator-grid,.now-grid,.task-strip,.packet{grid-template-columns:1fr}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation:none !important;transition:none !important}
     }
   </style>
 </head>
@@ -329,28 +364,28 @@
 <div class="topbar">
   <h1><span class="pulse"></span>Harness Visualizer</h1>
   <div class="pills" id="topPills"></div>
-  <button class="toggle" id="sidebarToggle">⚙ Controls</button>
+  <button class="toggle" id="sidebarToggle" type="button">⚙ Controls</button>
 </div>
 
 <div class="layout" id="layout">
   <main>
 
     <section class="panel live-focus">
-      <h2>Live Harness Console <small>current agent · current task · exact handoff instruction</small></h2>
+      <h2>Execution Cockpit <small>Main dispatch · active agent · data packet · exact handoff prompt</small></h2>
       <div id="liveFocus"></div>
     </section>
 
     <section class="panel">
-      <h2>Runtime Map <small>compact role map; glow = active execution boundary</small></h2>
+      <h2>Communication Map <small>Main mediates every handoff; subagents exchange files, not chat</small></h2>
       <div class="arch" id="arch">
         <div class="arch-node main"><div class="name">Main Agent</div><div class="sub">orchestrates · no content reads</div></div>
-        <div class="arch-arrow">→</div>
+        <div class="arch-edge"><span class="arrow">→</span><span class="label">source path prompt</span></div>
         <div class="arch-node planner"><div class="name">question-planner</div><div class="sub">source path → contract</div></div>
-        <div class="arch-arrow">→</div>
+        <div class="arch-edge"><span class="arrow">→</span><span class="label">contract + design guide</span></div>
         <div class="arch-node builder"><div class="name">mastery-builder</div><div class="sub">writes outputs</div></div>
-        <div class="arch-arrow">↔</div>
+        <div class="arch-edge"><span class="arrow">→</span><span class="label">artifact paths</span></div>
         <div class="arch-node eval"><div class="name">learning-evaluator</div><div class="sub">PASS / FAIL report</div></div>
-        <div class="arch-loop">FAIL → resume same pair</div>
+        <div class="arch-loop">FAIL report path → Main resumes same Builder + Evaluator</div>
       </div>
     </section>
 
@@ -381,20 +416,20 @@
         <label>Project (auto-detected from <code>../output/</code>)</label>
         <select id="projectSelect"></select>
         <div style="display:flex;gap:6px;margin-top:6px">
-          <button class="btn" id="rescan">Rescan</button>
-          <button class="btn" id="toggleRefresh">Pause</button>
+          <button class="btn" id="rescan" type="button">Rescan</button>
+          <button class="btn" id="toggleRefresh" type="button">Pause</button>
         </div>
         <div class="hint">URL params: <code>?project=NAME</code>, <code>?interval=3000</code></div>
       </div>
       <div class="control">
         <label>Manual files (file:// fallback)</label>
-        <input id="eventsFile" type="file" accept=".jsonl,.txt,application/json">
-        <input id="stateFile" type="file" accept=".json,application/json" style="margin-top:6px">
+        <input id="eventsFile" name="eventsFile" type="file" accept=".jsonl,.txt,application/json" aria-label="Manual events.jsonl file">
+        <input id="stateFile" name="stateFile" type="file" accept=".json,application/json" aria-label="Manual state.json file" style="margin-top:6px">
       </div>
       <div class="control">
         <label>Direct URL</label>
-        <input id="urlInput" type="text" placeholder="../output/PROJECT/events.jsonl">
-        <button class="btn" id="loadUrl">Load</button>
+        <input id="urlInput" name="urlInput" type="text" autocomplete="off" placeholder="../output/PROJECT/events.jsonl">
+        <button class="btn" id="loadUrl" type="button">Load</button>
       </div>
       <div class="hint" id="loadStatus">Initializing…</div>
       <div class="hint" id="refreshStatus" style="margin-top:4px"></div>
@@ -684,18 +719,18 @@ function renderArchitecture(s){
     (name==='planner' && plannerActive ? ' active' : '') +
     (name==='builder' && builderActive ? ' active' : '') +
     (name==='eval' && evalActive ? ' active' : '');
-  const arrowMainPlanner = plannerActive ? 'flow' : '';
-  const arrowPlannerBuilder = builderActive ? 'flow' : '';
-  const arrowBuilderEval = evalActive ? 'flow' : '';
+  const edgeMainPlanner = plannerActive ? 'flow' : '';
+  const edgeMainBuilder = builderActive ? 'flow' : '';
+  const edgeMainEval = evalActive ? 'flow' : '';
   $('arch').innerHTML = `
     <div class="arch-node ${cls('main')}"><div class="name">Main Agent</div><div class="sub">orchestrates · no content reads</div></div>
-    <div class="arch-arrow ${arrowMainPlanner}">→</div>
+    <div class="arch-edge ${edgeMainPlanner}"><span class="arrow">→</span><span class="label">source path prompt</span></div>
     <div class="arch-node ${cls('planner')}"><div class="name">question-planner</div><div class="sub">source path → contract</div></div>
-    <div class="arch-arrow ${arrowPlannerBuilder}">→</div>
+    <div class="arch-edge ${edgeMainBuilder}"><span class="arrow">→</span><span class="label">contract + design guide</span></div>
     <div class="arch-node ${cls('builder')}"><div class="name">mastery-builder</div><div class="sub">writes outputs</div></div>
-    <div class="arch-arrow ${arrowBuilderEval}">↔</div>
+    <div class="arch-edge ${edgeMainEval}"><span class="arrow">→</span><span class="label">artifact paths</span></div>
     <div class="arch-node ${cls('eval')}"><div class="name">learning-evaluator</div><div class="sub">PASS / FAIL report</div></div>
-    <div class="arch-loop">FAIL → resume same pair</div>
+    <div class="arch-loop">FAIL report path → Main resumes same Builder + Evaluator</div>
   `;
 }
 
@@ -763,6 +798,32 @@ function currentLive(s){
     action,input,output,guards,instruction,instance:ev.instance_id||null,eventType:ev.type||'derived'};
 }
 
+function flowForLive(live, s){
+  const sender = {label:'Main Agent', sub:'dispatches by prompt + file paths', cls:'sender'};
+  let receiver = {label:live.roleLabel, sub:live.action, cls:`receiver ${live.roleCls}`};
+  let waiting = {label:live.roleLabel, sub:'Main waits for path-only result', cls:'waiting'};
+  let edge = 'handoff prompt';
+  let next = 'returns paths / verdict';
+
+  if(live.role==='main-agent'){
+    receiver = {label:'Main Agent', sub:'updates run-log, events.jsonl, state.json', cls:'receiver main'};
+    waiting = {label:'Next Dispatch', sub:s.current_task ? `task ${s.current_task}` : 'planning or next task', cls:'waiting'};
+    edge = 'state update';
+    next = 'choose next agent';
+  }else if(live.role==='question-planner'){
+    edge = 'source path only';
+    next = 'contract files → task01 Builder';
+  }else if(live.role==='mastery-builder'){
+    edge = 'contract + task spec';
+    next = 'artifact paths → Evaluator';
+  }else if(live.role==='learning-evaluator'){
+    edge = 'artifact paths';
+    next = 'PASS next task / FAIL repair same pair';
+  }
+
+  return {sender, receiver, waiting, edge, next};
+}
+
 function handoffInstruction({role, taskId, task, s, input, output}){
   const outputDir = s.output || `output/${s.project||'{PROJECT}'}`;
   const title = task ? (task.title || taskId) : (taskId==='planning' ? 'Source Analysis' : 'Orchestration');
@@ -791,39 +852,70 @@ function renderLiveFocus(s){
     return;
   }
   const roundText = live.round==null ? '—' : `${live.round}/2`;
+  const flow = flowForLive(live, s);
   $('liveFocus').innerHTML = `
-    <div class="live-console">
-      <div class="live-card active live-role ${live.roleCls}">
-        <div class="k">1 · Executing Agent</div>
-        <div class="v" title="${escapeHtml(live.roleLabel)}">${escapeHtml(live.roleLabel)}</div>
-        <div class="sub">${escapeHtml(live.action)}</div>
-        <div class="live-status-row">
-          <span class="live-badge hot">${escapeHtml(live.eventType)}</span>
-          <span class="live-badge" title="${escapeHtml(live.instance||'pending instance id')}">${escapeHtml(live.instance ? '#'+live.instance.substring(0,12) : 'pending id')}</span>
-          <span class="live-badge">${escapeHtml(live.ts||'—')}</span>
+    <div class="operator-grid">
+      <div class="mission-card">
+        <div class="panel-label">1 · Who Sent What To Whom</div>
+        <div class="route-summary">${escapeHtml(flow.sender.label)} → ${escapeHtml(flow.receiver.label)} · carries: ${escapeHtml(flow.edge)} · next: ${escapeHtml(flow.next)}</div>
+        <div class="now-grid">
+          <div class="actor ${flow.sender.cls}">
+            <div class="eyebrow">sender</div>
+            <div class="name">${escapeHtml(flow.sender.label)}</div>
+            <div class="detail">${escapeHtml(flow.sender.sub)}</div>
+          </div>
+          <div class="flow-arrow" title="${escapeHtml(flow.edge)}"><span class="arrow">→</span><span class="edge-text">${escapeHtml(flow.edge)}</span></div>
+          <div class="actor ${flow.receiver.cls}">
+            <div class="eyebrow">executing agent</div>
+            <div class="name" title="${escapeHtml(live.roleLabel)}">${escapeHtml(live.roleLabel)}</div>
+            <div class="detail">${escapeHtml(flow.receiver.sub)}</div>
+          </div>
+          <div class="flow-arrow" title="${escapeHtml(flow.next)}"><span class="arrow">→</span><span class="edge-text">${escapeHtml(flow.next)}</span></div>
+          <div class="actor ${flow.waiting.cls}">
+            <div class="eyebrow">main is waiting for</div>
+            <div class="name" title="${escapeHtml(flow.waiting.label)}">${escapeHtml(flow.waiting.label)}</div>
+            <div class="detail">${escapeHtml(flow.waiting.sub)}</div>
+          </div>
         </div>
-      </div>
 
-      <div class="live-card active">
-        <div class="k">2 · Task Being Executed</div>
-        <div class="v" title="${escapeHtml(live.taskLabel)}">${escapeHtml(live.taskLabel)}</div>
-        <div class="sub">status: ${escapeHtml(live.taskStatus)} · round: ${escapeHtml(roundText)}</div>
-        <div class="handoff-grid" style="margin-top:12px">
+        <div class="task-strip">
+          <div class="task-focus">
+            <div class="panel-label">2 · Current Task</div>
+            <div class="big" title="${escapeHtml(live.taskLabel)}">${escapeHtml(live.taskLabel)}</div>
+            <div class="small">status: ${escapeHtml(live.taskStatus)} · repair round: ${escapeHtml(roundText)}</div>
+          </div>
+          <div class="task-focus">
+            <div class="panel-label">3 · Agent State</div>
+            <div class="live-status-row">
+              <span class="live-badge hot">${escapeHtml(live.eventType)}</span>
+              <span class="live-badge" title="${escapeHtml(live.instance||'pending instance id')}">${escapeHtml(live.instance ? '#'+live.instance.substring(0,12) : 'pending id')}</span>
+              <span class="live-badge">${escapeHtml(live.ts||'—')}</span>
+              <span class="live-badge">${escapeHtml(live.role)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="packet">
           <div>
-            <div class="sub">Input artifacts</div>
+            <div class="packet-title">Input Passed</div>
             <div class="handoff-list">${chips(live.input,'input') || '<span class="hint">—</span>'}</div>
           </div>
           <div>
-            <div class="sub">Expected output</div>
+            <div class="packet-title">Expected Return / Written Files</div>
             <div class="handoff-list">${chips(live.output,'output') || '<span class="hint">—</span>'}</div>
           </div>
         </div>
+        <div class="live-status-row">
+          ${(live.guards||[]).map(g=>`<span class="guard-chip">${escapeHtml(g)}</span>`).join('')}
+        </div>
       </div>
 
-      <div class="live-card handoff-card">
-        <div class="k">3 · Handoff Instruction Sent to Agent</div>
+      <div class="prompt-card">
+        <div class="prompt-head">
+          <div class="title">4 · Exact Handoff Prompt</div>
+          <span class="live-badge">sent by Main</span>
+        </div>
         <pre class="instruction-box">${escapeHtml(live.instruction)}</pre>
-        <div class="guard-strip">${(live.guards||[]).map(g=>`<span class="guard-chip">${escapeHtml(g)}</span>`).join('')}</div>
       </div>
     </div>
   `;
