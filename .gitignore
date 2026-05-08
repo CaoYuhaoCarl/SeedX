@@ -1,0 +1,8 @@
+.DS_Store
+**/.DS_Store
+
+output/*
+!output/.gitkeep
+
+.claude/settings.local.json
+.claude/agent-memory/

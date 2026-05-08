@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Harness Visualizer</title>
+  <style>
+    :root{
+      --bg:#020617; --panel:#0f172a; --line:#1e293b;
+      --text:#e5e7eb; --muted:#94a3b8; --dim:#64748b;
+      --cyan:#22d3ee; --emerald:#34d399; --amber:#fbbf24; --rose:#fb7185; --violet:#a78bfa;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      background-image:linear-gradient(rgba(30,41,59,.32) 1px,transparent 1px),
+                       linear-gradient(90deg,rgba(30,41,59,.32) 1px,transparent 1px);
+      background-size:40px 40px;
+    }
+
+    /* ===== Top bar ===== */
+    .topbar{
+      display:flex;align-items:center;gap:14px;
+      padding:12px 22px;border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(15,23,42,.96),rgba(15,23,42,.78));
+      position:sticky;top:0;z-index:10;
+    }
+    .topbar h1{margin:0;font-size:15px;letter-spacing:.2px;flex:0 0 auto;display:flex;align-items:center}
+    .pulse{display:inline-block;width:8px;height:8px;border-radius:999px;
+      background:var(--emerald);box-shadow:0 0 12px var(--emerald);margin-right:8px;animation:pulse 1.6s infinite}
+    @keyframes pulse{50%{opacity:.35;transform:scale(.7)}}
+
+    /* ===== Activity highlight animations ===== */
+    @keyframes task-glow{
+      0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0), 0 8px 28px rgba(0,0,0,.22)}
+      50%   {box-shadow:0 0 0 3px rgba(251,191,36,.28), 0 8px 28px rgba(0,0,0,.22)}
+    }
+    @keyframes box-active-builder{
+      0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}
+      50%   {box-shadow:0 0 18px 2px rgba(52,211,153,.55)}
+    }
+    @keyframes box-active-eval{
+      0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}
+      50%   {box-shadow:0 0 18px 2px rgba(251,191,36,.55)}
+    }
+    @keyframes dot-spin{
+      0%,100%{transform:scale(1);box-shadow:0 0 8px rgba(251,191,36,.5)}
+      50%   {transform:scale(1.35);box-shadow:0 0 14px rgba(251,191,36,.95)}
+    }
+    @keyframes flow-dash{
+      to{background-position:-22px 0}
+    }
+    @keyframes row-flash{
+      0%,100%{background:rgba(251,191,36,.04)}
+      50%   {background:rgba(251,191,36,.14)}
+    }
+    @keyframes pill-blink{
+      0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.0)}
+      50%   {box-shadow:0 0 0 3px rgba(251,191,36,.25)}
+    }
+    @keyframes badge-pulse{
+      0%,100%{opacity:1}
+      50%   {opacity:.55}
+    }
+    .pills{display:flex;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
+    .pill-stat{display:inline-flex;align-items:center;gap:6px;
+      border:1px solid #263449;border-radius:999px;padding:3px 10px;
+      font-size:11px;background:rgba(2,6,23,.55)}
+    .pill-stat .k{color:var(--muted)}
+    .pill-stat .v{color:#f8fafc;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pill-stat.phase .v{color:var(--cyan)}
+    .pill-stat.task  .v{color:var(--amber)}
+    .pill-stat.task.live{border-color:rgba(251,191,36,.55);
+      animation:pill-blink 1.6s ease-in-out infinite}
+    .pill-stat.task.live::before{content:"";display:inline-block;width:7px;height:7px;
+      border-radius:999px;background:var(--amber);margin-right:2px;
+      box-shadow:0 0 8px var(--amber);animation:badge-pulse 1.2s ease-in-out infinite}
+    .pill-stat.done  .v{color:var(--emerald)}
+    .toggle{cursor:pointer;background:rgba(34,211,238,.08);
+      border:1px solid var(--cyan);color:var(--cyan);
+      border-radius:8px;padding:6px 12px;font-size:12px;font-family:inherit}
+    .toggle:hover{background:rgba(34,211,238,.18)}
+
+    /* ===== Layout ===== */
+    .layout{display:grid;grid-template-columns:1fr 0;
+      transition:grid-template-columns .25s ease;min-height:calc(100vh - 49px)}
+    .layout.open{grid-template-columns:1fr 380px}
+    main{padding:18px 22px;min-width:0}
+    aside{border-left:1px solid var(--line);background:rgba(15,23,42,.5);
+      overflow-y:auto;overflow-x:hidden}
+    .layout:not(.open) aside{display:none}
+
+    /* ===== Panel ===== */
+    .panel{background:rgba(15,23,42,.84);border:1px solid var(--line);
+      border-radius:14px;padding:12px 16px;margin-bottom:14px;
+      box-shadow:0 8px 28px rgba(0,0,0,.22)}
+    .panel h2{margin:0 0 12px;font-size:12px;color:#f8fafc;
+      text-transform:uppercase;letter-spacing:1.2px}
+    .panel h2 small{color:var(--muted);font-size:11px;
+      text-transform:none;letter-spacing:normal;margin-left:8px;font-weight:normal}
+    .hint{font-size:10px;color:var(--muted);line-height:1.5}
+
+    /* ===== Architecture (compact horizontal) ===== */
+    .arch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .arch-node{flex:1;min-width:130px;border:1px solid #334155;
+      border-radius:10px;padding:7px 10px;text-align:center;
+      background:rgba(15,23,42,.86);font-size:11px}
+    .arch-node .name{color:#f8fafc}
+    .arch-node .sub{color:var(--muted);font-size:9px;margin-top:2px}
+    .arch-node.main{border-color:var(--cyan)}
+    .arch-node.planner{border-color:var(--violet)}
+    .arch-node.builder{border-color:var(--emerald)}
+    .arch-node.eval{border-color:var(--amber)}
+    .arch-node.active{position:relative;transform:translateY(-1px)}
+    .arch-node.active::before{content:"";position:absolute;left:8px;top:8px;width:7px;height:7px;
+      border-radius:999px;animation:badge-pulse 1.1s ease-in-out infinite}
+    .arch-node.active.main{background:rgba(34,211,238,.08);animation:arch-active-main 1.6s ease-in-out infinite}
+    .arch-node.active.main::before{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+    .arch-node.active.planner{background:rgba(167,139,250,.08);animation:arch-active-planner 1.6s ease-in-out infinite}
+    .arch-node.active.planner::before{background:var(--violet);box-shadow:0 0 8px var(--violet)}
+    .arch-node.active.builder{background:rgba(52,211,153,.08);animation:box-active-builder 1.6s ease-in-out infinite}
+    .arch-node.active.builder::before{background:var(--emerald);box-shadow:0 0 8px var(--emerald)}
+    .arch-node.active.eval{background:rgba(251,191,36,.08);animation:box-active-eval 1.6s ease-in-out infinite}
+    .arch-node.active.eval::before{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+    @keyframes arch-active-main{
+      0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}
+      50%   {box-shadow:0 0 18px 2px rgba(34,211,238,.55)}
+    }
+    @keyframes arch-active-planner{
+      0%,100%{box-shadow:0 0 0 0 rgba(167,139,250,0)}
+      50%   {box-shadow:0 0 18px 2px rgba(167,139,250,.55)}
+    }
+    .arch-arrow{color:#475569;font-size:18px;flex:0 0 auto}
+    .arch-arrow.flow{color:var(--amber);animation:arrow-shift 1.2s ease-in-out infinite}
+    .arch-loop{color:var(--rose);font-size:11px;padding:5px 11px;
+      border:1px dashed rgba(251,113,133,.45);border-radius:999px;
+      background:rgba(251,113,133,.06);flex:0 0 auto}
+
+    /* ===== Real-time harness console ===== */
+    .live-focus{border-color:rgba(251,191,36,.42);
+      background:radial-gradient(circle at 18% 0%,rgba(251,191,36,.10),transparent 34%),
+                 linear-gradient(135deg,rgba(15,23,42,.96),rgba(2,6,23,.78))}
+    .live-console{display:grid;grid-template-columns:minmax(260px,.74fr) minmax(320px,.9fr) minmax(420px,1.42fr);
+      gap:14px;align-items:stretch}
+    .live-card{border:1px solid #263449;border-radius:14px;padding:13px 14px;background:rgba(2,6,23,.54);
+      min-width:0;position:relative;overflow:hidden;min-height:138px}
+    .live-card.active{border-color:rgba(251,191,36,.62);animation:task-glow 2.2s ease-in-out infinite}
+    .live-card .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:9px}
+    .live-card .v{font-size:20px;color:#f8fafc;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .live-card .sub{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.45;overflow:hidden;text-overflow:ellipsis}
+    .live-role.planner .v{color:var(--violet)}
+    .live-role.builder .v{color:var(--emerald)}
+    .live-role.eval .v{color:var(--amber)}
+    .live-role.main .v{color:var(--cyan)}
+    .live-status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+    .live-badge{font-size:10px;border:1px solid #334155;border-radius:999px;padding:3px 8px;color:#cbd5e1;background:rgba(15,23,42,.6)}
+    .live-badge.hot{color:var(--amber);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.08)}
+    .handoff-card{border-color:rgba(34,211,238,.34);background:rgba(2,6,23,.62)}
+    .handoff-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+    .handoff-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+    .handoff-chip{font-size:10px;color:#c4b5fd;background:rgba(139,92,246,.08);
+      border:1px solid rgba(167,139,250,.28);border-radius:6px;padding:2px 7px;
+      max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .handoff-chip.input{color:#bae6fd;border-color:rgba(34,211,238,.28);background:rgba(34,211,238,.06)}
+    .handoff-chip.output{color:#bbf7d0;border-color:rgba(52,211,153,.28);background:rgba(52,211,153,.06)}
+    .instruction-box{border:1px solid rgba(251,191,36,.26);border-radius:10px;background:#020617;margin-top:9px;
+      padding:10px;max-height:220px;overflow:auto;color:#fde68a;font-size:11px;line-height:1.55;white-space:pre-wrap}
+    .guard-strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+    .guard-chip{font-size:10px;color:#bbf7d0;border:1px solid rgba(52,211,153,.28);border-radius:999px;padding:2px 7px;background:rgba(52,211,153,.06)}
+    .live-empty{color:var(--muted);font-size:12px;border:1px dashed #334155;border-radius:12px;padding:12px;background:rgba(2,6,23,.32)}
+
+    .diagnostics-grid{display:grid;grid-template-columns:1fr;gap:14px}
+    @media(min-width:1200px){.diagnostics-grid{grid-template-columns:1fr 1fr}.diagnostics-grid .wide{grid-column:1/-1}}
+    .section-muted{opacity:.72}
+    .section-active{border-color:rgba(251,191,36,.38)}
+
+    /* ===== Task pipeline ===== */
+    .pipeline{display:grid;grid-template-columns:1fr;gap:14px}
+    @media(min-width:1100px){.pipeline{grid-template-columns:repeat(3,1fr)}}
+    .task{border:1px solid #263449;border-radius:14px;
+      background:rgba(2,6,23,.42);padding:12px;
+      display:flex;flex-direction:column;gap:10px;position:relative}
+    .task.pending{opacity:.5}
+    .task.pending .be,.task.pending .iter,.task.pending .outputs{opacity:.72}
+    .task.passed {border-color:rgba(52,211,153,.55);background:rgba(52,211,153,.04)}
+    .task.failed {border-color:rgba(251,113,133,.55);background:rgba(251,113,133,.04)}
+    .task.running{border-color:rgba(251,191,36,.55);background:rgba(251,191,36,.04);
+      animation:task-glow 2.2s ease-in-out infinite}
+    .task.running .verdict.running{animation:badge-pulse 1.6s ease-in-out infinite}
+    .task .head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .task .title{font-size:14px;color:#f8fafc;font-weight:600}
+    .task .sub{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.5px}
+    .verdict{display:inline-flex;align-items:center;gap:5px;
+      font-size:11px;border:1px solid #334155;border-radius:999px;
+      padding:3px 9px;color:var(--muted);white-space:nowrap}
+    .verdict.pass   {color:var(--emerald);border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.08)}
+    .verdict.fail   {color:var(--rose);   border-color:rgba(251,113,133,.5);background:rgba(251,113,133,.08)}
+    .verdict.running{color:var(--amber);  border-color:rgba(251,191,36,.5); background:rgba(251,191,36,.08)}
+
+    /* build → eval → verdict mini-diagram */
+    .be{display:grid;grid-template-columns:1fr auto 1fr auto auto;
+      align-items:stretch;gap:6px;padding:10px 6px;
+      border:1px dashed #1e293b;border-radius:10px;
+      background:rgba(15,23,42,.45)}
+    .be-box{border:1px solid #334155;border-radius:8px;padding:8px 6px;
+      text-align:center;font-size:11px;background:#0f172a;
+      display:flex;flex-direction:column;justify-content:center;min-width:0}
+    .be-box .role{color:#f8fafc}
+    .be-box .iid{color:var(--muted);font-size:10px;margin-top:2px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .be-box.builder{border-color:rgba(52,211,153,.6)}
+    .be-box.eval   {border-color:rgba(251,191,36,.6)}
+    .be-box.active.builder{animation:box-active-builder 1.6s ease-in-out infinite;
+      border-color:var(--emerald);background:rgba(52,211,153,.08)}
+    .be-box.active.eval   {animation:box-active-eval 1.6s ease-in-out infinite;
+      border-color:var(--amber);   background:rgba(251,191,36,.08)}
+    @keyframes arrow-shift{
+      0%  {transform:translateX(-3px);opacity:.45}
+      50% {opacity:1}
+      100%{transform:translateX(3px);opacity:.45}
+    }
+    .be-arrow.flow{color:var(--amber);animation:arrow-shift 1.2s ease-in-out infinite}
+    .be-arrow.flow .qty{color:var(--amber)}
+    .be-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;
+      color:#64748b;font-size:14px;min-width:46px}
+    .be-arrow .qty{font-size:9px;color:var(--muted);margin-top:1px}
+    .be-end{font-size:11px;padding:8px 10px;border-radius:8px;
+      border:1px solid #334155;background:#0f172a;
+      display:flex;align-items:center;justify-content:center;min-width:64px;text-align:center}
+    .be-end.pass   {color:var(--emerald);border-color:rgba(52,211,153,.6);background:rgba(52,211,153,.08)}
+    .be-end.fail   {color:var(--rose);   border-color:rgba(251,113,133,.6);background:rgba(251,113,133,.08)}
+    .be-end.running{color:var(--amber);  border-color:rgba(251,191,36,.6); background:rgba(251,191,36,.08)}
+
+    /* iteration dots row */
+    .iter{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+    .dots{display:flex;gap:5px}
+    .dots .d{width:10px;height:10px;border-radius:999px;
+      border:1px solid #334155;background:rgba(15,23,42,.6)}
+    .dots .d.active{background:var(--amber);border-color:var(--amber);
+      animation:dot-spin 1.1s ease-in-out infinite}
+    .dots .d.done  {background:var(--emerald);border-color:var(--emerald)}
+    .dots .d.failed{background:var(--rose);border-color:var(--rose)}
+    .resume-tag{color:var(--rose);font-size:10px;padding:2px 7px;
+      border:1px dashed rgba(251,113,133,.45);border-radius:999px;
+      background:rgba(251,113,133,.06)}
+
+    /* outputs strip */
+    .outputs{display:flex;flex-wrap:wrap;gap:4px}
+    .out-chip{font-size:10px;color:#c4b5fd;background:rgba(139,92,246,.08);
+      border:1px solid rgba(167,139,250,.3);border-radius:6px;padding:2px 7px;
+      max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    /* ===== Activity timeline (grouped) ===== */
+    .timeline-groups{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;padding-right:4px}
+    .tl-group{border:1px solid #1e293b;border-radius:10px;
+      padding:10px 12px;background:rgba(2,6,23,.35)}
+    .tl-group .gh{display:flex;align-items:center;justify-content:space-between;gap:8px;
+      font-size:12px;color:#f8fafc;margin-bottom:8px;
+      padding-bottom:6px;border-bottom:1px solid #1e293b}
+    .tl-group .gh .label{display:flex;align-items:center;gap:8px}
+    .tl-event{display:grid;grid-template-columns:80px 22px 150px 1fr;
+      gap:10px;padding:4px 0;font-size:11px;align-items:center}
+    .tl-event .ts{color:var(--dim)}
+    .tl-event .ic{text-align:center;font-size:13px}
+    .tl-event .role{color:var(--muted)}
+    .tl-event .role.builder{color:var(--emerald)}
+    .tl-event .role.eval   {color:var(--amber)}
+    .tl-event .role.planner{color:var(--violet)}
+    .tl-event .role.main   {color:var(--cyan)}
+    .tl-event .det{color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    /* ===== Agent instances table ===== */
+    .agents-wrap{overflow-x:auto}
+    .agents-table{width:100%;font-size:12px;border-collapse:separate;border-spacing:0}
+    .agents-table th{text-align:left;color:var(--muted);font-weight:normal;font-size:11px;
+      padding:6px 10px;border-bottom:1px solid #1e293b}
+    .agents-table td{padding:8px 10px;border-bottom:1px solid rgba(30,41,59,.5)}
+    .agents-table tr:hover td{background:rgba(15,23,42,.6)}
+    .agents-table tr.live td{animation:row-flash 2s ease-in-out infinite}
+    .agents-table tr.live td:first-child{position:relative}
+    .agents-table tr.live td:first-child::before{
+      content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+      background:var(--amber);box-shadow:0 0 8px var(--amber);
+      animation:badge-pulse 1.2s ease-in-out infinite}
+    .role-tag{display:inline-block;padding:2px 8px;border-radius:6px;
+      font-size:10px;border:1px solid #334155}
+    .role-tag.planner{color:var(--violet);border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.06)}
+    .role-tag.builder{color:var(--emerald);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.06)}
+    .role-tag.eval   {color:var(--amber);  border-color:rgba(251,191,36,.4); background:rgba(251,191,36,.06)}
+    .agents-table code{color:#c4b5fd;font-size:11px}
+
+    /* ===== Sidebar ===== */
+    aside .panel{margin:14px}
+    .control{border:1px dashed #334155;border-radius:10px;padding:10px;
+      background:rgba(2,6,23,.45);margin-bottom:10px}
+    .control label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
+    select,input[type=file],input[type=text]{width:100%;color:var(--text);background:#020617;
+      border:1px solid #334155;border-radius:7px;padding:7px;
+      font-family:inherit;font-size:12px}
+    .btn{cursor:pointer;background:rgba(34,211,238,.08);
+      border:1px solid var(--cyan);color:var(--cyan);
+      border-radius:7px;padding:6px 10px;margin-top:6px;font-size:12px;font-family:inherit}
+    .btn:hover{background:rgba(34,211,238,.16)}
+    .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .stat{border:1px solid #263449;border-radius:8px;padding:8px;background:rgba(2,6,23,.4)}
+    .stat .k{font-size:10px;color:var(--muted)}
+    .stat .v{font-size:12px;margin-top:3px;color:#f8fafc;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .discipline{display:flex;flex-direction:column;gap:6px}
+    .check{font-size:11px;border:1px solid #263449;border-radius:8px;
+      padding:7px 9px;background:rgba(2,6,23,.4);
+      display:flex;align-items:center;gap:6px}
+    .ok{color:var(--emerald)}
+    .bad{color:var(--rose)}
+
+    @media(max-width:980px){
+      .layout,.layout.open{grid-template-columns:1fr !important}
+      aside{border-left:none;border-top:1px solid var(--line)}
+      .arch{flex-direction:column;align-items:stretch}
+      .arch-arrow{transform:rotate(90deg);text-align:center}
+      .live-console{grid-template-columns:1fr}
+      .handoff-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1><span class="pulse"></span>Harness Visualizer</h1>
+  <div class="pills" id="topPills"></div>
+  <button class="toggle" id="sidebarToggle">⚙ Controls</button>
+</div>
+
+<div class="layout" id="layout">
+  <main>
+
+    <section class="panel live-focus">
+      <h2>Live Harness Console <small>current agent · current task · exact handoff instruction</small></h2>
+      <div id="liveFocus"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Runtime Map <small>compact role map; glow = active execution boundary</small></h2>
+      <div class="arch" id="arch">
+        <div class="arch-node main"><div class="name">Main Agent</div><div class="sub">orchestrates · no content reads</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node planner"><div class="name">question-planner</div><div class="sub">source path → contract</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node builder"><div class="name">mastery-builder</div><div class="sub">writes outputs</div></div>
+        <div class="arch-arrow">↔</div>
+        <div class="arch-node eval"><div class="name">learning-evaluator</div><div class="sub">PASS / FAIL report</div></div>
+        <div class="arch-loop">FAIL → resume same pair</div>
+      </div>
+    </section>
+
+    <section class="panel" id="pipelinePanel">
+      <h2>Task Pipeline <small>sequential: task01 → task02 → task03</small></h2>
+      <div class="pipeline" id="pipeline"></div>
+    </section>
+
+    <div class="diagnostics-grid">
+      <section class="panel" id="timelinePanel">
+        <h2>Activity Timeline <small>audit trail; grouped by phase / task</small></h2>
+        <div class="timeline-groups" id="timeline"></div>
+      </section>
+
+      <section class="panel" id="agentsPanel">
+        <h2>Agent Instances <small>subagent invocation IDs; resume discipline check</small></h2>
+        <div class="agents-wrap" id="agents"></div>
+      </section>
+    </div>
+
+  </main>
+
+  <aside id="sidebar">
+
+    <div class="panel">
+      <h2>Load Run Data</h2>
+      <div class="control">
+        <label>Project (auto-detected from <code>../output/</code>)</label>
+        <select id="projectSelect"></select>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn" id="rescan">Rescan</button>
+          <button class="btn" id="toggleRefresh">Pause</button>
+        </div>
+        <div class="hint">URL params: <code>?project=NAME</code>, <code>?interval=3000</code></div>
+      </div>
+      <div class="control">
+        <label>Manual files (file:// fallback)</label>
+        <input id="eventsFile" type="file" accept=".jsonl,.txt,application/json">
+        <input id="stateFile" type="file" accept=".json,application/json" style="margin-top:6px">
+      </div>
+      <div class="control">
+        <label>Direct URL</label>
+        <input id="urlInput" type="text" placeholder="../output/PROJECT/events.jsonl">
+        <button class="btn" id="loadUrl">Load</button>
+      </div>
+      <div class="hint" id="loadStatus">Initializing…</div>
+      <div class="hint" id="refreshStatus" style="margin-top:4px"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Project Status</h2>
+      <div id="statusGrid" class="status-grid"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Discipline</h2>
+      <div id="discipline" class="discipline"></div>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let events = []; let state = null;
+
+const taskDefaults = {
+  task01:{title:'Framing',     status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['question-brief.md','domain-map.md'],report:'review-reports/task01-evaluation.md'},
+  task02:{title:'Mastery Path',status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['learning-path.md','exercises.md','checkpoints.md'],report:'review-reports/task02-evaluation.md'},
+  task03:{title:'Application & Transfer', status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['application-plan.md','transfer-plan.md'],report:'review-reports/task03-evaluation.md'}
+};
+
+const escapeHtml = s => String(s??'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fileName = p => String(p||'').split('/').filter(Boolean).pop() || String(p||'—');
+const parseJsonl = text => text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map((line,i)=>{
+  try{ return {...JSON.parse(line), _idx:i}; }catch(e){ return {ts:'?',type:'parse_error',error:e.message,line:i+1,raw:line,_idx:i}; }
+});
+const orderedEvents = () => [...events].sort((a,b)=>String(a.ts||'').localeCompare(String(b.ts||'')) || ((a._idx??0)-(b._idx??0)));
+
+// ===== File / URL loaders =====
+function loadFile(file, cb){ const r=new FileReader(); r.onload=()=>cb(String(r.result||'')); r.readAsText(file); }
+$('eventsFile').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return;
+  stopAuto('manual file load');
+  loadFile(f, txt=>{ events=parseJsonl(txt); $('loadStatus').textContent=`Loaded ${events.length} events from ${f.name}`; render(); });
+});
+$('stateFile').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return;
+  stopAuto('manual file load');
+  loadFile(f, txt=>{ try{ state=JSON.parse(txt); $('loadStatus').textContent+=` + state ${f.name}`; render(); }
+                     catch(err){ $('loadStatus').textContent='state.json parse error: '+err.message; } });
+});
+$('loadUrl').addEventListener('click', async()=>{ const url=$('urlInput').value.trim(); if(!url) return;
+  stopAuto('switched to manual URL');
+  try{
+    const res=await fetch(url,{cache:'no-store'}); const txt=await res.text(); events=parseJsonl(txt);
+    const stateUrl=url.replace(/events\.jsonl$/,'state.json');
+    if(stateUrl!==url){ try{ const sr=await fetch(stateUrl,{cache:'no-store'}); if(sr.ok) state=JSON.parse(await sr.text()); }catch(_){} }
+    $('loadStatus').textContent=`Loaded ${events.length} events from URL`; render();
+  }catch(e){ $('loadStatus').textContent='URL load failed: '+e.message; }
+});
+
+// ===== Sidebar toggle =====
+$('sidebarToggle').addEventListener('click', ()=>{ $('layout').classList.toggle('open'); });
+
+// ===== Auto-refresh =====
+const params = new URLSearchParams(location.search);
+const REFRESH_MS = Math.max(500, parseInt(params.get('interval')||'2000',10));
+let currentProject = null; let projects = [];
+let autoTimer = null; let autoOn = true;
+let lastEventsText = ''; let lastStateText = '';
+
+const setRefreshStatus = msg => $('refreshStatus').textContent = msg;
+function stopAuto(reason){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } autoOn=false;
+  $('toggleRefresh').textContent='Resume'; setRefreshStatus('Auto-refresh paused — '+reason); }
+function startAuto(){ if(autoTimer) clearInterval(autoTimer); autoOn=true;
+  $('toggleRefresh').textContent='Pause'; autoTimer=setInterval(refreshOnce, REFRESH_MS); refreshOnce(); }
+
+$('toggleRefresh').addEventListener('click', ()=>{
+  if(autoOn){ stopAuto('user toggle'); }
+  else if(currentProject){ startAuto(); }
+  else { setRefreshStatus('No project selected'); }
+});
+$('rescan').addEventListener('click', ()=> scanProjects(true));
+$('projectSelect').addEventListener('change', e=>{
+  const p = projects.find(x=>x.name===e.target.value);
+  if(p){ currentProject=p; events=[]; state=null; lastEventsText=''; lastStateText=''; startAuto(); }
+});
+
+async function fetchText(url){ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) throw new Error(res.status+' '+url); return res.text(); }
+
+async function scanProjects(userTriggered){
+  $('loadStatus').textContent = 'Scanning ../output/ ...';
+  try{
+    const html = await fetchText('../output/');
+    const re = /<a href="([^"?#]+)"/g; const seen = new Set(); let m;
+    while((m = re.exec(html))){
+      const href = decodeURIComponent(m[1]);
+      if(!href.endsWith('/')) continue;
+      const name = href.replace(/\/$/,'');
+      if(name && name!=='..' && name!=='.' && !name.startsWith('?') && !seen.has(name)) seen.add(name);
+    }
+    projects = [...seen].map(name => ({name, base:`../output/${name}/`}));
+    if(!projects.length){ $('loadStatus').textContent='../output/ 下未发现项目目录'; return; }
+    const sel = $('projectSelect');
+    sel.innerHTML = projects.map(p=>`<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+    const wanted = params.get('project');
+    let pick = wanted && projects.find(p=>p.name===wanted);
+    if(!pick){
+      const probes = await Promise.all(projects.map(async p=>{
+        try{ const t = await fetchText(p.base+'state.json'); const j=JSON.parse(t); return {p, ts:j.updated_at||''}; }
+        catch(_){ return {p, ts:''}; }
+      }));
+      probes.sort((a,b)=> (b.ts||'').localeCompare(a.ts||''));
+      pick = probes[0].p;
+    }
+    sel.value = pick.name; currentProject = pick;
+    $('loadStatus').textContent = `Found ${projects.length} project(s); selected ${pick.name}`;
+    startAuto();
+  }catch(e){
+    const hint = location.protocol==='file:' ? '需要通过 HTTP 服务打开（python3 -m http.server）' : e.message;
+    $('loadStatus').textContent = 'Auto-scan 失败：'+hint;
+    if(userTriggered) setRefreshStatus('');
+  }
+}
+
+async function refreshOnce(){
+  if(!currentProject) return;
+  const base = currentProject.base; let changed=false;
+  try{
+    const t = await fetchText(base+'events.jsonl');
+    if(t !== lastEventsText){ lastEventsText=t; events=parseJsonl(t); changed=true; }
+  }catch(e){ setRefreshStatus(`events.jsonl 加载失败：${e.message}`); return; }
+  try{
+    const t = await fetchText(base+'state.json');
+    if(t !== lastStateText){ lastStateText=t; try{ state=JSON.parse(t); changed=true; }catch(_){} }
+  }catch(_){ /* state is optional */ }
+  if(changed) render();
+  setRefreshStatus(`${currentProject.name} · ${events.length} events · ${new Date().toLocaleTimeString()}`);
+}
+
+// ===== Init =====
+window.addEventListener('DOMContentLoaded', ()=>{
+  const evParam = params.get('events');
+  if(evParam){
+    stopAuto('using explicit ?events= URL');
+    (async()=>{
+      try{
+        const txt = await fetchText(evParam); events = parseJsonl(txt);
+        const stParam = params.get('state'); if(stParam){ try{ state = JSON.parse(await fetchText(stParam)); }catch(_){} }
+        $('loadStatus').textContent = `Loaded ${events.length} events from ?events=`; render();
+      }catch(e){ $('loadStatus').textContent = 'URL load failed: '+e.message; }
+    })();
+    return;
+  }
+  scanProjects(false);
+});
+
+// ===== State derivation =====
+function deriveState(){
+  const s = state ? structuredClone(state) : {
+    project:null, source:null, output:null, phase:'unknown', current_task:null,
+    tasks: structuredClone(taskDefaults),
+    discipline:{main_read_source_body:false, main_read_builder_deliverables:false,
+      main_read_full_evaluation_reports:false,
+      same_task_builder_resume_required:true, same_task_evaluator_resume_required:true}
+  };
+  if(!s.tasks) s.tasks = structuredClone(taskDefaults);
+  for(const ev of orderedEvents()){
+    if(ev.type==='project_started'){ s.project=ev.project; s.source=ev.source; s.output=ev.output; s.phase='started'; }
+    if(ev.type==='agent_started'){
+      if(ev.task && ev.task!=='planning'){ s.phase='task_loop'; s.current_task=ev.task; }
+      if(ev.role==='question-planner') s.phase='planning';
+    }
+    if(ev.type==='agent_finished' && ev.role==='question-planner') s.phase='planned';
+    // Track per-task active role for live highlight
+    if(ev.task && s.tasks[ev.task]){
+      const t = s.tasks[ev.task];
+      if(ev.type==='agent_started'){
+        if(ev.role==='mastery-builder')   t._active='builder';
+        if(ev.role==='learning-evaluator') t._active='eval';
+      }
+      if(ev.type==='agent_resumed'){
+        if(ev.role==='mastery-builder')   t._active='builder';
+        if(ev.role==='learning-evaluator') t._active='eval';
+      }
+      if(ev.type==='agent_finished' || ev.type==='evaluation_finished'){
+        t._active=null;
+      }
+      if(ev.type==='task_status_changed' && (ev.to==='✅'||ev.to==='⚠️')){
+        t._active=null;
+      }
+    }
+    if(ev.type==='agent_finished' && ev.role==='mastery-builder' && ev.task && s.tasks[ev.task]){
+      s.tasks[ev.task].builder_id = ev.instance_id || s.tasks[ev.task].builder_id;
+      if(ev.outputs) s.tasks[ev.task].outputs = ev.outputs;
+    }
+    if(ev.type==='evaluation_finished' && ev.task && s.tasks[ev.task]){
+      s.tasks[ev.task].evaluator_id = ev.instance_id || s.tasks[ev.task].evaluator_id;
+      s.tasks[ev.task].judgment = ev.judgment;
+      s.tasks[ev.task].report = ev.report || s.tasks[ev.task].report;
+      s.tasks[ev.task].iterations = Math.max(s.tasks[ev.task].iterations||0, ev.round||0);
+    }
+    if(ev.type==='agent_resumed' && ev.task && s.tasks[ev.task]){
+      s.tasks[ev.task].iterations = Math.max(s.tasks[ev.task].iterations||0, ev.round||0);
+    }
+    if(ev.type==='task_status_changed' && ev.task && s.tasks[ev.task]){
+      s.tasks[ev.task].status = ev.to || s.tasks[ev.task].status;
+      if(ev.iterations!=null) s.tasks[ev.task].iterations = ev.iterations;
+      if(ev.judgment) s.tasks[ev.task].judgment = ev.judgment;
+    }
+    if(ev.type==='project_finished'){ s.phase='finished'; s.current_task=null; s.status=ev.status; s.duration=ev.duration; }
+    if(ev.ts) s.updated_at = ev.ts;
+  }
+  return s;
+}
+
+// ===== Render =====
+function render(){
+  const s = deriveState();
+  renderArchitecture(s);
+  renderLiveFocus(s);
+  renderPanelEmphasis(s);
+  renderTopPills(s);
+  renderPipeline(s);
+  renderTimeline(s);
+  renderAgents(s);
+  renderStatus(s);
+  renderDiscipline(s);
+}
+
+function activeRolesFromEvents(s){
+  const open = new Map();
+  for(const ev of orderedEvents()){
+    if(!ev.role || !ev.task) continue;
+    const key = `${ev.role}|${ev.task}`;
+    // Once the task loop begins, planning is no longer the live focus.
+    if(ev.type==='agent_started' && ev.task!=='planning') open.delete('question-planner|planning');
+    if(ev.type==='agent_started' || ev.type==='agent_resumed') open.set(key, ev.role);
+    if(ev.type==='agent_finished' || ev.type==='evaluation_finished') open.delete(key);
+  }
+  const roles = new Set(open.values());
+  // Fallback to derived state so incomplete event logs still light the correct role.
+  if(s.phase==='planning') roles.add('question-planner');
+  const tasks = s.tasks || {};
+  for(const t of Object.values(tasks)){
+    if(t && t._active==='builder') roles.add('mastery-builder');
+    if(t && t._active==='eval') roles.add('learning-evaluator');
+  }
+  return roles;
+}
+
+function renderArchitecture(s){
+  const roles = activeRolesFromEvents(s);
+  const projectLive = !!(s.project || events.length) && s.phase!=='finished';
+  const plannerActive = roles.has('question-planner');
+  const builderActive = roles.has('mastery-builder');
+  const evalActive = roles.has('learning-evaluator');
+  const cls = name => name + (name==='main' && projectLive ? ' active' : '') +
+    (name==='planner' && plannerActive ? ' active' : '') +
+    (name==='builder' && builderActive ? ' active' : '') +
+    (name==='eval' && evalActive ? ' active' : '');
+  const arrowMainPlanner = plannerActive ? 'flow' : '';
+  const arrowPlannerBuilder = builderActive ? 'flow' : '';
+  const arrowBuilderEval = evalActive ? 'flow' : '';
+  $('arch').innerHTML = `
+    <div class="arch-node ${cls('main')}"><div class="name">Main Agent</div><div class="sub">orchestrates · no content reads</div></div>
+    <div class="arch-arrow ${arrowMainPlanner}">→</div>
+    <div class="arch-node ${cls('planner')}"><div class="name">question-planner</div><div class="sub">source path → contract</div></div>
+    <div class="arch-arrow ${arrowPlannerBuilder}">→</div>
+    <div class="arch-node ${cls('builder')}"><div class="name">mastery-builder</div><div class="sub">writes outputs</div></div>
+    <div class="arch-arrow ${arrowBuilderEval}">↔</div>
+    <div class="arch-node ${cls('eval')}"><div class="name">learning-evaluator</div><div class="sub">PASS / FAIL report</div></div>
+    <div class="arch-loop">FAIL → resume same pair</div>
+  `;
+}
+
+function currentLive(s){
+  const open = new Map();
+  for(const ev of orderedEvents()){
+    if(!ev.role || !ev.task) continue;
+    const key = `${ev.role}|${ev.task}`;
+    // Once the task loop begins, planning is no longer the live focus.
+    if(ev.type==='agent_started' && ev.task!=='planning') open.delete('question-planner|planning');
+    if(ev.type==='agent_started' || ev.type==='agent_resumed') open.set(key, ev);
+    if(ev.type==='agent_finished' || ev.type==='evaluation_finished') open.delete(key);
+  }
+  let ev = [...open.values()].pop() || null;
+  if(!ev && s.phase==='planning') ev = {role:'question-planner',task:'planning',ts:s.updated_at};
+  if(!ev){
+    const tasks = s.tasks || {};
+    for(const [taskId,t] of Object.entries(tasks)){
+      if(classifyTask(t)==='running' && t._active){
+        ev = {role:t._active==='builder'?'mastery-builder':'learning-evaluator',task:taskId,ts:s.updated_at};
+      }
+    }
+  }
+  if(!ev && s.phase!=='finished' && (s.project || events.length)) ev = {role:'main-agent',task:s.current_task||'orchestration',ts:s.updated_at};
+  if(!ev) return null;
+
+  const tasks = s.tasks || {};
+  const task = tasks[ev.task] || null;
+  const role = ev.role || 'main-agent';
+  const taskLabel = ev.task==='planning' ? 'planning · Source Analysis' :
+    task ? `${ev.task} · ${task.title||''}` : (ev.task || 'orchestration');
+  const roleLabel = role==='main-agent' ? 'Main Agent' : role;
+  const roleCls = role==='question-planner' ? 'planner' :
+                  role==='mastery-builder' ? 'builder' :
+                  role==='learning-evaluator' ? 'eval' : 'main';
+  const taskStatus = task ? (task.status || '—') : (ev.task==='planning' ? 'planning' : (s.phase || '—'));
+  const round = task ? (task.iterations || 0) : null;
+  let action = 'orchestrating workflow';
+  let input = []; let output = []; let guards = [];
+
+  if(role==='question-planner'){
+    action = 'Read only the learning-source path and produce the planning contract.';
+    input = [fileName(s.source)||'source path'];
+    output = ['learning-plan.md','learning-contract.md','learning-design-guide.md','project-lessons.md','review-reports/'];
+    guards = ['explicit input only','planner may read source','main only passes path'];
+  }else if(role==='mastery-builder'){
+    action = 'Generate this task’s required learning artifacts from contract + design guide.';
+    input = ['learning-contract.md','learning-design-guide.md','project-lessons.md'];
+    output = (task && task.outputs) || [];
+    guards = ['do not invent external background','write only target artifacts','return paths only'];
+  }else if(role==='learning-evaluator'){
+    action = 'Independently evaluate the task artifacts and write a PASS/FAIL report.';
+    input = (task && task.outputs) || [];
+    output = [task && task.report || 'review report'];
+    guards = ['read-only except report','check explicit-input-only','return verdict + report path'];
+  }else{
+    action = 'Dispatch/resume subagents, capture IDs, and update events/state/run-log.';
+    input = s.current_task ? [`current task: ${s.current_task}`] : [fileName(s.source)||'source path'];
+    output = ['events.jsonl','state.json','run-log.md'];
+    guards = ['do not read source body','do not read deliverables','grep verdict only'];
+  }
+
+  const instruction = ev.instruction || ev.prompt || handoffInstruction({role, taskId:ev.task, task, s, input, output});
+  return {role,roleLabel,roleCls,taskLabel,taskId:ev.task,taskStatus,round,ts:ev.ts||s.updated_at,
+    action,input,output,guards,instruction,instance:ev.instance_id||null,eventType:ev.type||'derived'};
+}
+
+function handoffInstruction({role, taskId, task, s, input, output}){
+  const outputDir = s.output || `output/${s.project||'{PROJECT}'}`;
+  const title = task ? (task.title || taskId) : (taskId==='planning' ? 'Source Analysis' : 'Orchestration');
+  const outputs = (output||[]).join(', ') || '—';
+  const outputPaths = (output||[]).map(o => `${outputDir}/${o}`.replace(/\/+/g,'/')).join('\n- ') || '—';
+  if(role==='question-planner'){
+    return `学习问题路径：${s.source || '{LEARNING_SOURCE_FILE}'}\n输出目录：${outputDir}\n\n请读取学习问题和 designing-mastery-paths skill，按 explicit-input-only 个性化原则产出 learning-plan.md、learning-contract.md、learning-design-guide.md、project-lessons.md，并创建 review-reports/。完成后只返回文件路径列表。`;
+  }
+  if(role==='mastery-builder'){
+    return `当前任务：${taskId} (${title})\nlearning-contract: ${outputDir}/learning-contract.md\nlearning-design-guide: ${outputDir}/learning-design-guide.md\nproject-lessons: ${outputDir}/project-lessons.md\n输出目录：${outputDir}\n指定产物：${outputs}\n\n请按当前任务生成指定学习产物。只使用 learning-contract 中显式记录的学习者背景和应用场景，不得引入默认个人/行业/职业/产品/身份背景。完成后只返回产物路径列表。`;
+  }
+  if(role==='learning-evaluator'){
+    return `当前任务：${taskId} (${title})\nlearning-contract: ${outputDir}/learning-contract.md\n待评估产物：\n- ${outputPaths}\n输出报告：${outputDir}/${task && task.report || 'review-reports/taskNN-evaluation.md'}\n\n请按 reviewing-mastery-paths skill 独立评估，检查是否只使用输入显式提供的个性化背景，写入报告，并只返回 PASS/FAIL 和报告路径。`;
+  }
+  return `Main Agent orchestration step\ncurrent_task: ${s.current_task || taskId || '—'}\nsource_path: ${s.source || '—'}\noutput_dir: ${outputDir}\n\n执行约束：只调度和维护状态；不读取学习问题正文、不读取 Builder 产物正文、不读取完整评估报告；只通过路径、agent IDs、PASS/FAIL 判定、events.jsonl/state.json/run-log.md 维护 harness。`;
+}
+
+function chips(items, kind){
+  return (items||[]).map(x => `<span class="handoff-chip ${kind}" title="${escapeHtml(x)}">${escapeHtml(fileName(x))}</span>`).join('');
+}
+
+function renderLiveFocus(s){
+  const live = currentLive(s);
+  if(!live){
+    $('liveFocus').innerHTML = '<div class="live-empty">No active run loaded. Start a harness run or select a project with events/state files.</div>';
+    return;
+  }
+  const roundText = live.round==null ? '—' : `${live.round}/2`;
+  $('liveFocus').innerHTML = `
+    <div class="live-console">
+      <div class="live-card active live-role ${live.roleCls}">
+        <div class="k">1 · Executing Agent</div>
+        <div class="v" title="${escapeHtml(live.roleLabel)}">${escapeHtml(live.roleLabel)}</div>
+        <div class="sub">${escapeHtml(live.action)}</div>
+        <div class="live-status-row">
+          <span class="live-badge hot">${escapeHtml(live.eventType)}</span>
+          <span class="live-badge" title="${escapeHtml(live.instance||'pending instance id')}">${escapeHtml(live.instance ? '#'+live.instance.substring(0,12) : 'pending id')}</span>
+          <span class="live-badge">${escapeHtml(live.ts||'—')}</span>
+        </div>
+      </div>
+
+      <div class="live-card active">
+        <div class="k">2 · Task Being Executed</div>
+        <div class="v" title="${escapeHtml(live.taskLabel)}">${escapeHtml(live.taskLabel)}</div>
+        <div class="sub">status: ${escapeHtml(live.taskStatus)} · round: ${escapeHtml(roundText)}</div>
+        <div class="handoff-grid" style="margin-top:12px">
+          <div>
+            <div class="sub">Input artifacts</div>
+            <div class="handoff-list">${chips(live.input,'input') || '<span class="hint">—</span>'}</div>
+          </div>
+          <div>
+            <div class="sub">Expected output</div>
+            <div class="handoff-list">${chips(live.output,'output') || '<span class="hint">—</span>'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="live-card handoff-card">
+        <div class="k">3 · Handoff Instruction Sent to Agent</div>
+        <pre class="instruction-box">${escapeHtml(live.instruction)}</pre>
+        <div class="guard-strip">${(live.guards||[]).map(g=>`<span class="guard-chip">${escapeHtml(g)}</span>`).join('')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPanelEmphasis(s){
+  const inPlanning = s.phase==='planning' || currentLive(s)?.taskId==='planning';
+  const pipeline = $('pipelinePanel');
+  if(pipeline){
+    pipeline.classList.toggle('section-muted', inPlanning);
+    pipeline.classList.toggle('section-active', !!s.current_task && s.phase!=='finished');
+  }
+}
+
+function renderTopPills(s){
+  const tasks = s.tasks || taskDefaults;
+  const done = Object.values(tasks).filter(t => t.status==='✅' || t.status==='⚠️').length;
+  const items = [
+    {k:'project', v:s.project||'—'},
+    {k:'phase',   v:s.phase||'—',          cls:'phase'},
+    {k:'task',    v:s.current_task||'—',   cls:'task'+(s.current_task && s.phase!=='finished'?' live':'')},
+    {k:'progress',v:`${done}/3`,           cls:done===3?'done':''},
+    {k:'updated', v:s.updated_at||'—'}
+  ];
+  $('topPills').innerHTML = items.map(p =>
+    `<span class="pill-stat ${p.cls||''}"><span class="k">${p.k}</span><span class="v" title="${escapeHtml(p.v)}">${escapeHtml(p.v)}</span></span>`
+  ).join('');
+}
+
+function classifyTask(t){
+  if(t.status === '✅') return 'passed';
+  if(t.status === '⚠️') return 'failed';
+  if(t.status === '✏️') return 'running';
+  return 'pending';
+}
+
+function renderPipeline(s){
+  const tasks = s.tasks || taskDefaults;
+  const html = Object.entries(tasks).map(([id,t]) => {
+    const cls = classifyTask(t);
+    const round = t.iterations || 0;
+    // 3 dots = round 0 (initial), 1 (first repair), 2 (second repair)
+    const dots = [0,1,2].map(i => {
+      if(cls==='pending') return '<div class="d"></div>';
+      if(i < round) return '<div class="d done"></div>';
+      if(i === round){
+        if(cls==='running') return '<div class="d active"></div>';
+        if(cls==='failed')  return '<div class="d failed"></div>';
+        return '<div class="d done"></div>';
+      }
+      return '<div class="d"></div>';
+    }).join('');
+
+    const verdictCls = cls==='passed'?'pass':cls==='failed'?'fail':cls==='running'?'running':'';
+    const verdictTxt = t.judgment || (cls==='running'?'in progress': cls==='pending'?'pending':'—');
+
+    const builderShort = t.builder_id ? t.builder_id.substring(0,7) : '—';
+    const evalShort    = t.evaluator_id ? t.evaluator_id.substring(0,7) : '—';
+    const builderQty   = (t.outputs||[]).length || (cls==='pending'?'—':'?');
+
+    const beEnd = cls==='pending' ? '<span style="color:var(--muted)">pending</span>' :
+                  cls==='passed'  ? 'PASS ✓' :
+                  cls==='failed'  ? 'FAIL ✗' :
+                                    'running…';
+    const beEndCls = cls==='passed'?'pass':cls==='failed'?'fail':cls==='running'?'running':'';
+
+    const activeRole = (cls==='running') ? (t._active||null) : null;
+    const builderActive = activeRole==='builder' ? 'active' : '';
+    const evalActive    = activeRole==='eval'    ? 'active' : '';
+    const arrow1Flow    = activeRole==='builder' ? 'flow' : '';
+    const arrow2Flow    = activeRole==='eval'    ? 'flow' : '';
+
+    const outChips = (t.outputs||[]).map(o =>
+      `<span class="out-chip" title="${escapeHtml(o)}">${escapeHtml(o.split('/').pop())}</span>`
+    ).join('');
+
+    const showResume = cls==='failed' && round<2;
+
+    return `
+      <div class="task ${cls}">
+        <div class="head">
+          <div>
+            <div class="title">${escapeHtml(id)} · ${escapeHtml(t.title||'')}</div>
+            <div class="sub">${escapeHtml(t.status||'⏳')} ${escapeHtml(t.report||'')}</div>
+          </div>
+          <span class="verdict ${verdictCls}">${escapeHtml(verdictTxt)}</span>
+        </div>
+        <div class="be">
+          <div class="be-box builder ${builderActive}">
+            <div class="role">Builder</div>
+            <div class="iid" title="${escapeHtml(t.builder_id||'')}">#${escapeHtml(builderShort)}</div>
+          </div>
+          <div class="be-arrow ${arrow1Flow}">→<span class="qty">${builderQty} files</span></div>
+          <div class="be-box eval ${evalActive}">
+            <div class="role">Evaluator</div>
+            <div class="iid" title="${escapeHtml(t.evaluator_id||'')}">#${escapeHtml(evalShort)}</div>
+          </div>
+          <div class="be-arrow ${arrow2Flow}">→<span class="qty">1 report</span></div>
+          <div class="be-end ${beEndCls}">${beEnd}</div>
+        </div>
+        <div class="iter">
+          <span>Round <strong style="color:#f8fafc">${round}</strong>/2</span>
+          <span class="dots">${dots}</span>
+          ${showResume ? '<span class="resume-tag">↺ resume same pair</span>' : ''}
+        </div>
+        <div class="outputs">${outChips || '<span class="hint">no outputs yet</span>'}</div>
+      </div>
+    `;
+  }).join('');
+  $('pipeline').innerHTML = html;
+}
+
+const TYPE_ICON = {
+  'project_started':'▶','project_finished':'■',
+  'agent_started':'▷','agent_finished':'✓','agent_resumed':'↺',
+  'evaluation_finished':'⚖','task_status_changed':'◆','parse_error':'⚠'
+};
+
+function eventGroup(ev){
+  if(ev.type==='project_started' || ev.type==='project_finished') return 'project';
+  if(ev.role==='question-planner' || ev.task==='planning') return 'planning';
+  if(ev.task && /^task\d+/.test(ev.task)) return ev.task;
+  return 'other';
+}
+
+function eventRoleClass(ev){
+  if(ev.role==='question-planner')   return 'planner';
+  if(ev.role==='mastery-builder')    return 'builder';
+  if(ev.role==='learning-evaluator') return 'eval';
+  return 'main';
+}
+
+function eventDescription(ev){
+  if(ev.type==='parse_error') return `line ${ev.line}: ${ev.error}`;
+  const parts = [];
+  if(ev.judgment)     parts.push(`<strong>${escapeHtml(ev.judgment)}</strong>`);
+  if(ev.round != null) parts.push(`round=${ev.round}`);
+  if(ev.outputs)      parts.push(`${ev.outputs.length} outputs`);
+  if(ev.instance_id)  parts.push(`#${ev.instance_id.substring(0,7)}`);
+  if(ev.from && ev.to) parts.push(`${escapeHtml(ev.from)}→${escapeHtml(ev.to)}`);
+  if(ev.status)       parts.push(`status=${escapeHtml(ev.status)}`);
+  if(ev.duration)     parts.push(`dur=${escapeHtml(ev.duration)}`);
+  if(ev.reason)       parts.push(escapeHtml(ev.reason));
+  if(ev.source)       parts.push(`source=${escapeHtml(fileName(ev.source))}`);
+  if(ev.output)       parts.push(`output=${escapeHtml(fileName(ev.output))}`);
+  if(!parts.length && ev.type==='agent_started') parts.push('started');
+  if(!parts.length && ev.type==='project_started') parts.push('run initialized');
+  return parts.join(' · ');
+}
+
+function renderTimeline(s){
+  if(!events.length){ $('timeline').innerHTML = '<div class="hint">No events loaded.</div>'; return; }
+  const groups = {};
+  for(const ev of orderedEvents()){
+    const g = eventGroup(ev);
+    if(!groups[g]) groups[g] = [];
+    groups[g].push(ev);
+  }
+  const order = ['project','planning','task01','task02','task03','other'];
+  const tasks = s.tasks || {};
+  const html = order.filter(g => groups[g] && groups[g].length).map(g => {
+    let label = g; let suffix = '';
+    if(g==='project')       label = 'Project';
+    else if(g==='planning') label = 'Planning Phase';
+    else if(/^task/.test(g)){
+      const t = tasks[g];
+      label = `${g}${t?(' · '+(t.title||'')):''}`;
+      if(t){
+        const cls = classifyTask(t);
+        const verdictCls = cls==='passed'?'pass':cls==='failed'?'fail':cls==='running'?'running':'';
+        suffix = `<span class="verdict ${verdictCls}">${escapeHtml(t.judgment||t.status||'')}</span>`;
+      }
+    } else label = 'Other';
+
+    const rows = groups[g].map(ev => {
+      const role = eventRoleClass(ev);
+      const icon = TYPE_ICON[ev.type] || '•';
+      return `<div class="tl-event">
+        <span class="ts">${escapeHtml(ev.ts||'')}</span>
+        <span class="ic">${icon}</span>
+        <span class="role ${role}">${escapeHtml(ev.role||ev.type)}</span>
+        <span class="det">${eventDescription(ev)}</span>
+      </div>`;
+    }).join('');
+
+    return `<div class="tl-group">
+      <div class="gh">
+        <span class="label">${escapeHtml(label)} <span class="hint">${groups[g].length} events</span></span>
+        ${suffix}
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+  $('timeline').innerHTML = html;
+}
+
+function renderAgents(){
+  const instances = new Map();
+  const openByRoleTask = new Map();
+  const keyFor = ev => `${ev.role||''}|${ev.task||''}`;
+
+  function ensureInstance(id, ev){
+    if(!instances.has(id)){
+      instances.set(id, {id, role:ev.role||'', task:ev.task||'', started:null,
+        finished:null, rounds:0, judgment:null, resumes:0, provisional:id.startsWith('pending:')});
+    }
+    const inst = instances.get(id);
+    if(ev.role) inst.role = ev.role;
+    if(ev.task) inst.task = ev.task;
+    return inst;
+  }
+
+  for(const ev of orderedEvents()){
+    if(!ev.role || !ev.task) continue;
+    const rt = keyFor(ev);
+
+    if(ev.type==='agent_started' && ev.task!=='planning'){
+      const plannerId = openByRoleTask.get('question-planner|planning');
+      if(plannerId && instances.has(plannerId)) instances.get(plannerId).finished = ev.ts;
+      openByRoleTask.delete('question-planner|planning');
+    }
+
+    if(ev.type==='agent_started'){
+      const id = ev.instance_id || `pending:${ev.role}:${ev.task}:${ev.ts||events.indexOf(ev)}`;
+      const inst = ensureInstance(id, ev);
+      if(!inst.started) inst.started = ev.ts;
+      inst.finished = null;
+      openByRoleTask.set(rt, id);
+      continue;
+    }
+
+    if(ev.type==='agent_finished' || ev.type==='evaluation_finished'){
+      let id = ev.instance_id || openByRoleTask.get(rt);
+      const provisional = openByRoleTask.get(rt);
+      if(ev.instance_id && provisional && provisional.startsWith('pending:') && instances.has(provisional)){
+        const prev = instances.get(provisional);
+        instances.delete(provisional);
+        instances.set(ev.instance_id, {...prev, id:ev.instance_id, provisional:false});
+        id = ev.instance_id;
+      }
+      if(!id) continue;
+      const inst = ensureInstance(id, ev);
+      if(!inst.started) inst.started = ev.ts;
+      inst.finished = ev.ts;
+      if(ev.type==='evaluation_finished'){
+        inst.judgment = ev.judgment;
+        inst.rounds = Math.max(inst.rounds, ev.round||0);
+      }
+      openByRoleTask.delete(rt);
+      continue;
+    }
+
+    if(ev.type==='agent_resumed'){
+      const id = ev.instance_id || openByRoleTask.get(rt) || `pending:${ev.role}:${ev.task}:${ev.ts||events.indexOf(ev)}`;
+      const inst = ensureInstance(id, ev);
+      if(!inst.started) inst.started = ev.ts;
+      inst.resumes++;
+      inst.rounds = Math.max(inst.rounds, ev.round||0);
+      inst.finished = null;
+      openByRoleTask.set(rt, id);
+    }
+  }
+  if(!instances.size){ $('agents').innerHTML = '<div class="hint">No agent instances yet.</div>'; return; }
+
+  const list = [...instances.values()].sort((a,b)=>(a.started||'').localeCompare(b.started||''));
+  const rows = list.map(inst => {
+    const roleCls = inst.role==='question-planner' ? 'planner' :
+                    inst.role==='mastery-builder' ? 'builder' :
+                    inst.role==='learning-evaluator' ? 'eval' : '';
+    const live = !inst.finished && inst.started;
+    const status = inst.finished ? (inst.judgment ? `✓ ${escapeHtml(inst.judgment)}` : '✓ done') : '🔄 running';
+    return `<tr class="${live?'live':''}">
+      <td><span class="role-tag ${roleCls}">${escapeHtml(inst.role||'—')}</span></td>
+      <td><code title="${escapeHtml(inst.id)}">${escapeHtml(inst.id.substring(0,12))}</code></td>
+      <td>${escapeHtml(inst.task||'—')}</td>
+      <td>${inst.rounds}</td>
+      <td>${inst.resumes}</td>
+      <td>${status}</td>
+      <td><span class="hint">${escapeHtml(inst.started||'—')} → ${escapeHtml(inst.finished||'—')}</span></td>
+    </tr>`;
+  }).join('');
+  $('agents').innerHTML = `<table class="agents-table">
+    <thead><tr><th>Role</th><th>Instance</th><th>Task</th><th>Round</th><th>Resumes</th><th>Status</th><th>Window</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderStatus(s){
+  const items = [
+    ['Project', s.project||'—'],
+    ['Phase', s.phase||'—'],
+    ['Current Task', s.current_task||'—'],
+    ['Updated', s.updated_at||'—'],
+    ['Source', s.source||'—'],
+    ['Output', s.output||'—'],
+    ['Overall', s.status||'running'],
+    ['Duration', s.duration||'—']
+  ];
+  $('statusGrid').innerHTML = items.map(([k,v]) =>
+    `<div class="stat"><div class="k">${k}</div><div class="v" title="${escapeHtml(v)}">${escapeHtml(v)}</div></div>`
+  ).join('');
+}
+
+function renderDiscipline(s){
+  const d = s.discipline || {};
+  const items = [
+    ['Main read source body',               d.main_read_source_body===false],
+    ['Main read builder deliverables',      d.main_read_builder_deliverables===false],
+    ['Main read full reports',              d.main_read_full_evaluation_reports===false],
+    ['Same-task builder resume required',   d.same_task_builder_resume_required===true],
+    ['Same-task evaluator resume required', d.same_task_evaluator_resume_required===true],
+    ['Visualizer reads no content body',    true]
+  ];
+  $('discipline').innerHTML = items.map(([label,ok]) =>
+    `<div class="check"><span class="${ok?'ok':'bad'}">${ok?'✅':'❌'}</span> ${escapeHtml(label)}</div>`
+  ).join('');
+}
+
+render();
+</script>
+</body>
+</html>
