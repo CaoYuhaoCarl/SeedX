@@ -54,7 +54,7 @@ In progress / smoke testing.
 - 能完整跑完 `ai-agent-memory` smoke test。
 - 生成全部 7 个学习产物。
 - 生成 3 个 task evaluation report。
-- `run-log.md` 记录完整。
+- `_run/run-log.md` 记录完整。
 - 如果 FAIL，修正循环能正确 resume。
 
 ### 观察点
@@ -62,7 +62,7 @@ In progress / smoke testing.
 - Evaluator 是否太宽松。
 - Builder 是否生成泛泛总结。
 - Task 之间是否一致。
-- `learning-contract.md` 是否足够约束后续产物。
+- `_agent/learning-contract.md` 是否足够约束后续产物。
 
 ---
 
@@ -99,7 +99,7 @@ Smoke test 发现以下问题之一：
 
 ### 触发条件
 
-如果 Builder 输出偏散、偏百科、偏长文，说明 `learning-contract.md` 不够强。
+如果 Builder 输出偏散、偏百科、偏长文，说明 `_agent/learning-contract.md` 不够强。
 
 ### 计划改动
 
@@ -132,8 +132,8 @@ docs/plans/harness-observability-visualization-plan.md
 
 ### MVP 改动
 
-- 新增 `events.jsonl` 事件流。
-- 可选新增 `state.json` 当前状态快照。
+- 新增 `_run/events.jsonl` 事件流。
+- 可选新增 `_run/state.json` 当前状态快照。
 - 新增 `tools/harness-visualizer.html` 单文件可视化面板。
 - UI 展示 timeline、agent swimlane、task cards、resume loop。
 
@@ -172,7 +172,7 @@ question-options.md
 
 1. Planner 生成 3-5 个更好的问题候选。
 2. 默认选择最贴近输入中明确目标的一个继续。
-3. 在 `learning-contract.md` 记录选择理由。
+3. 在 `_agent/learning-contract.md` 记录选择理由。
 
 ### 是否新增 Agent
 
@@ -316,6 +316,154 @@ scenario-based-activity.md
 
 ---
 
+## v0.10 — Production Runtime Hardening: 生产级运行时加固
+
+### 核心判断
+
+生产级最急需优化的不是继续增加 Agent，也不是优先扩展 UI，而是把当前依赖 `CLAUDE.md` / `AGENTS.md` 提示词纪律的主 Agent 编排，升级成确定性的 runtime controller。
+
+当前 harness 的真正核心是：
+
+```text
+文件化状态机 + 角色边界 + 独立评估闭环
+```
+
+多 Agent 是实现角色边界的一种策略，但不应该让 LLM 自己承担所有流程完整性、状态恢复、日志一致性和异常处理责任。
+
+### 目标
+
+将 Question-to-Mastery 从“Agent 按协议自觉执行”升级为“程序化 runtime 保证流程，Agent 只负责生成/评估”的生产级架构。
+
+### 目标架构
+
+```text
+Runtime Controller
+  - deterministic state machine
+  - retry / resume / validation
+  - writes events/state/log
+
+Agent Runners
+  - Claude Code runner
+  - Codex runner
+  - Lite single-agent runner
+  - Strict multi-agent runner
+
+Skills / Prompts
+  - planner skill
+  - builder skill
+  - evaluator skill
+  - rubric specs
+```
+
+### P0 优化项
+
+1. **Runtime Controller**
+   - 用脚本/程序驱动固定 phase：
+
+     ```text
+     init → planning → build → evaluate → repair → finalize
+     ```
+
+   - LLM 不再负责“记得下一步是什么”；LLM 只接收当前步骤的输入并返回结构化结果。
+   - Controller 负责创建输出目录、写 `_run/run-log.md`、追加 `_run/events.jsonl`、覆盖 `_run/state.json`、推进下一步。
+   - Controller 必须能从 `_run/state.json + _run/events.jsonl` 判断当前卡在哪一步。
+
+2. **Schema Validation**
+   - 为以下文件定义 schema / 格式校验：
+     - `_run/state.json`
+     - `_run/events.jsonl`
+     - `_run/run-log.md` 基础结构
+     - evaluation report 的判定行
+     - task registry 中要求的产物路径
+   - 每个 phase 完成后先验证，再进入下一 phase。
+   - visualizer 只展示通过解析的事件；坏事件要显式显示 parse/validation error。
+
+3. **Resume / Retry 机制**
+   - 支持运行中断后的恢复：
+     - planning 已完成但 task01 未开始；
+     - Builder 已完成但 Evaluator 未完成；
+     - Evaluator FAIL 后 repair 未执行；
+     - repair 执行后 recheck 未完成；
+     - `project_finished` 未写入。
+   - 对工具失败、Agent 返回不合格、缺失产物、缺失判定行分别定义 retry / fail-fast 策略。
+   - 每次 retry 必须写入事件，避免 silent retry。
+
+### P1 优化项
+
+1. **Runner Adapter**
+   - 抽象不同运行方式：
+     - Claude Code multi-agent；
+     - Codex agent；
+     - Lite single-agent + skills；
+     - Strict multi-agent。
+   - Controller 只依赖统一接口，例如：
+
+     ```text
+     run_planner(input_path, output_dir) -> planner outputs
+     run_builder(task, contract paths, output_dir) -> artifact paths
+     run_evaluator(task, artifact paths, report path) -> PASS/FAIL
+     resume_builder(instance_id, repair prompt) -> updated paths
+     resume_evaluator(instance_id, recheck prompt) -> PASS/FAIL
+     ```
+
+   - 不同 runtime 的 Agent ID、resume 能力、权限模型可以不同，但必须转换成统一事件协议。
+
+2. **Permission / Boundary Enforcement**
+   - 将“主 Agent 不读正文/产物”“Evaluator 不改产物”“Builder 不评估”从 prompt 纪律尽量下沉到 runtime 限制：
+     - 输入白名单；
+     - 输出路径白名单；
+     - 只读/可写目录分离；
+     - 每个角色的允许文件集合；
+     - 敏感源文件只传给 Planner。
+   - 如果某 runtime 无法强 enforce，必须在 `_run/state.json` 或 run metadata 中标注为 soft boundary。
+
+3. **Regression Test Set**
+   - 建立固定 golden questions：
+     - 简单清晰问题；
+     - 模糊宽泛问题；
+     - 带明确应用场景的问题；
+     - 敏感/隔离模式问题；
+     - 容易诱发泛泛输出的问题。
+   - 每次改 rubric、contract、controller 或 runner 后都跑 regression。
+   - 比较维度：
+     - PASS/FAIL 是否合理；
+     - artifact 是否完整；
+     - repair round 是否减少；
+     - 是否违反 explicit-input-only；
+     - events/state/log 是否一致。
+
+### P2 优化项
+
+- Visualizer 从观察面板升级成调试面板：
+  - 显示 validation error；
+  - 显示 retry/resume 原因；
+  - 显示 runner 类型和 boundary 强度；
+  - 支持 replay mode。
+- 再考虑新增 Agent：
+  - 只有当 regression 证明某角色拆分显著提升质量，才增加新 Agent。
+
+### 单 Agent 与多 Agent 的生产级定位
+
+生产级不应该把“单 Agent vs 多 Agent”作为信仰问题，而应该作为 runner 策略：
+
+| Mode | 定位 | 边界强度 | 适用场景 |
+|---|---|---|---|
+| Lite single-agent + skills | 快速、低成本、易移植 | soft | 本地快速生成、Codex 兼容、低风险问题 |
+| Strict multi-agent | 强隔离、强评估独立性 | stronger | 高质量输出、敏感问题、需要真实独立 evaluator |
+| Programmatic controller + runner adapters | 生产级底座 | depends on runner | 所有模式的统一执行层 |
+
+结论：skills 可以替代“角色知识”，但不能完全替代“执行边界”。生产级架构应让 controller 保证流程可靠性，让 runner 决定边界强度。
+
+### 验收标准
+
+- 任意一次运行中断后，能通过 controller 从现有 `_run/state.json + _run/events.jsonl` 恢复或给出明确 fail-fast 原因。
+- 坏 JSONL、坏 state、缺失产物、缺失判定行都会被 schema validation 捕获。
+- 同一批 golden questions 在至少两种 runner 下可执行，并产出同一套事件协议。
+- visualizer 能显示 runner 类型、当前 phase、当前 retry/resume 状态和 validation errors。
+- 主流程不再依赖主 Agent 自己“记住”完整状态机。
+
+---
+
 ## v1.0 — Stable Question-to-Mastery Harness
 
 ### 目标
@@ -370,7 +518,7 @@ Productization Potential
 
 ## 下一次继续开发时先看这里
 
-1. 先读 `output/ai-agent-memory/run-log.md` 看 smoke test 结果。
+1. 先读 `output/ai-agent-memory/_run/run-log.md` 看 smoke test 结果。
 2. 再读三个 evaluation report 的 FAIL/PASS 判定。
 3. 如果 evaluator 太松，做 v0.2。
 4. 如果 builder 太散，做 v0.3。

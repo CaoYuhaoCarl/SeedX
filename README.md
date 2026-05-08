@@ -42,10 +42,12 @@ Just type into Claude Code:
 +ask <your learning question body>
 ```
 
+`+ask:<body>` and `+ask：<body>` are also accepted; anything after the colon is treated as the question body, not as a subcommand name.
+
 A `UserPromptSubmit` hook will:
 - Save the question body to `input/questions/question-<timestamp>.md`
-- Inject the path and launch instruction so the orchestrator starts immediately
-- Open Harness Visualizer in the background and wait for this run's `events.jsonl` + `state.json`
+- Inject the path and launch instruction so the main agent ignores the original Q&A semantics and starts the orchestrator
+- Open Harness Visualizer in the background and wait for this run's `_run/events.jsonl` + `_run/state.json`
 
 Project name and output directory are auto-derived from the filename — nothing else to fill in.
 
@@ -75,7 +77,7 @@ Please strictly follow the CLAUDE.md in the current workspace:
 - The learning question path is input only; do not set the output directory to the input file's folder
 - Write all generated artifacts to the output directory
 - Keep the default perspective as a general learner; only background, goals, scenarios, and constraints explicitly provided by the input file may enter the learning contract and artifacts
-- After initialization, create run-log.md, events.jsonl, and state.json, then start the question-planner subagent
+- After initialization, create `README.md`, `_run/run-log.md`, `_run/events.jsonl`, and `_run/state.json`, then start the question-planner subagent
 ```
 
 Example input files are available in `input/questions/`.
@@ -88,25 +90,31 @@ A complete run generates the following under `output/{project-name}/`:
 
 ```text
 output/{project-name}/
-├── learning-plan.md           # Execution plan
-├── learning-contract.md       # Learning contract, shared by Builder and Evaluator
-├── learning-design-guide.md   # Design guide
-├── question-brief.md          # Question brief
-├── domain-map.md              # Domain map
-├── learning-path.md           # Learning path
-├── exercises.md               # Exercises
-├── checkpoints.md             # Checkpoints
-├── application-plan.md        # Application plan
-├── transfer-plan.md           # Transfer plan
-├── project-lessons.md         # Cross-task lessons
-├── run-log.md                 # Human-readable run log
-├── events.jsonl               # Event stream for the visualization panel
-├── state.json                 # Current state snapshot
-└── review-reports/
-    ├── task01-evaluation.md
-    ├── task02-evaluation.md
-    └── task03-evaluation.md
+├── README.md                  # Path index; question askers start here
+├── deliverables/              # Default reading path for the learner
+│   ├── question-brief.md
+│   ├── domain-map.md
+│   ├── learning-path.md
+│   ├── exercises.md
+│   ├── checkpoints.md
+│   ├── application-plan.md
+│   └── transfer-plan.md
+├── _agent/                    # Agent workspace; not the default reading path
+│   ├── learning-plan.md
+│   ├── learning-contract.md
+│   ├── learning-design-guide.md
+│   ├── project-lessons.md
+│   └── review-reports/
+│       ├── task01-evaluation.md
+│       ├── task02-evaluation.md
+│       └── task03-evaluation.md
+└── _run/                      # Runtime state and visualization data
+    ├── run-log.md
+    ├── events.jsonl
+    └── state.json
 ```
+
+See [`docs/specs/output-artifact-layout.md`](docs/specs/output-artifact-layout.md) for the classification rules.
 
 ---
 
@@ -114,9 +122,9 @@ output/{project-name}/
 
 | Task | Name | Builder outputs | Evaluation report |
 |---|---|---|---|
-| task01 | Framing | `question-brief.md`, `domain-map.md` | `review-reports/task01-evaluation.md` |
-| task02 | Mastery Path | `learning-path.md`, `exercises.md`, `checkpoints.md` | `review-reports/task02-evaluation.md` |
-| task03 | Application & Transfer | `application-plan.md`, `transfer-plan.md` | `review-reports/task03-evaluation.md` |
+| task01 | Framing | `deliverables/question-brief.md`, `deliverables/domain-map.md` | `_agent/review-reports/task01-evaluation.md` |
+| task02 | Mastery Path | `deliverables/learning-path.md`, `deliverables/exercises.md`, `deliverables/checkpoints.md` | `_agent/review-reports/task02-evaluation.md` |
+| task03 | Application & Transfer | `deliverables/application-plan.md`, `deliverables/transfer-plan.md` | `_agent/review-reports/task03-evaluation.md` |
 
 Tasks run in the fixed order `task01 → task02 → task03`. Each task is built first, then evaluated. PASS moves to the next task; FAIL enters a repair loop for up to 2 rounds.
 
@@ -155,10 +163,10 @@ Tasks run in the fixed order `task01 → task02 → task03`. Each task is built 
 
 ## Observability Visualization
 
-v0.2 adds a lightweight observability layer: it does not read learning artifact bodies, only run state. When you start with `+ask` / `+start`, the intake hook opens the panel in the background; the panel waits for and polls this run's `events.jsonl` + `state.json`.
+v0.2 adds a lightweight observability layer: it does not read learning artifact bodies, only run state. When you start with `+ask` / `+start`, the intake hook opens the panel in the background; the panel waits for and polls this run's `_run/events.jsonl` + `_run/state.json`.
 
 ```bash
-# Open the panel and load events.jsonl + state.json for a project, refreshing every 2 seconds
+# Open the panel and load _run/events.jsonl + _run/state.json for a project, refreshing every 2 seconds
 ./tools/open-visualizer.sh {project-name}
 
 # Without a project name, automatically choose the newest project under output/
@@ -195,7 +203,7 @@ All dimensions must score at least 4/5 to PASS. Extra hard gate: if an artifact 
 
 **If artifacts incorrectly assume a specific user or industry:**
 1. Check whether the input file actually provides that background.
-2. Check the "learner background and application scenario" section in `learning-contract.md`.
+2. Check the "learner background and application scenario" section in `_agent/learning-contract.md`.
 3. Then tune the `User Context Fit` hard gate in `reviewing-mastery-paths`.
 
 Every component must prove it is load-bearing before the system adds more complexity.

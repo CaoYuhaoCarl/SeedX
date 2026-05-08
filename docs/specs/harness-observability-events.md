@@ -12,9 +12,10 @@ Each run output directory should contain:
 
 ```text
 output/{PROJECT_NAME}/
-├── run-log.md       # human-readable log
-├── events.jsonl     # append-only machine-readable event stream
-└── state.json       # current state snapshot
+└── _run/
+    ├── run-log.md   # human-readable log
+    ├── events.jsonl # append-only machine-readable event stream
+    └── state.json   # current state snapshot
 ```
 
 Optional project-level viewer:
@@ -25,7 +26,7 @@ tools/harness-visualizer.html
 
 ---
 
-## Event Stream: `events.jsonl`
+## Event Stream: `_run/events.jsonl`
 
 Each line is one JSON object.
 
@@ -62,7 +63,7 @@ Recommended optional common fields:
 ### `agent_started`
 
 ```json
-{"ts":"260507 181500","type":"agent_started","role":"question-planner","task":"planning","instruction":"学习问题路径：input/questions/question-source-ai-agent-memory.md\n输出目录：output/ai-agent-memory\n\n请读取学习问题和 designing-mastery-paths skill，按 explicit-input-only 个性化原则产出 learning-plan.md、learning-contract.md、learning-design-guide.md、project-lessons.md，并创建 review-reports/。完成后只返回文件路径列表。"}
+{"ts":"260507 181500","type":"agent_started","role":"question-planner","task":"planning","instruction":"学习问题路径：input/questions/question-source-ai-agent-memory.md\n输出目录：output/ai-agent-memory\n\n请读取学习问题和 designing-mastery-paths skill，按 explicit-input-only 个性化原则产出 _agent/learning-plan.md、_agent/learning-contract.md、_agent/learning-design-guide.md、_agent/project-lessons.md，并创建 _agent/review-reports/。完成后只返回文件路径列表。"}
 ```
 
 `instruction` is the exact handoff prompt sent to the subagent after substituting paths/task fields. It may contain protocol instructions and paths, but never source bodies, deliverable bodies, full reports, hidden reasoning, or credentials.
@@ -70,7 +71,7 @@ Recommended optional common fields:
 ### `agent_finished`
 
 ```json
-{"ts":"260507 181812","type":"agent_finished","role":"question-planner","task":"planning","outputs":["learning-plan.md","learning-contract.md","learning-design-guide.md","project-lessons.md"]}
+{"ts":"260507 181812","type":"agent_finished","role":"question-planner","task":"planning","outputs":["_agent/learning-plan.md","_agent/learning-contract.md","_agent/learning-design-guide.md","_agent/project-lessons.md"]}
 ```
 
 ### `task_status_changed`
@@ -82,13 +83,13 @@ Recommended optional common fields:
 ### `evaluation_finished`
 
 ```json
-{"ts":"260507 182630","type":"evaluation_finished","role":"learning-evaluator","task":"task01","instance_id":"def456","report":"review-reports/task01-evaluation.md","judgment":"FAIL","round":0}
+{"ts":"260507 182630","type":"evaluation_finished","role":"learning-evaluator","task":"task01","instance_id":"def456","report":"_agent/review-reports/task01-evaluation.md","judgment":"FAIL","round":0}
 ```
 
 ### `agent_resumed`
 
 ```json
-{"ts":"260507 182700","type":"agent_resumed","role":"mastery-builder","task":"task01","instance_id":"abc123","reason":"evaluation_failed","round":1,"instruction":"当前任务：task01 (Framing)\n评估报告：output/ai-agent-memory/review-reports/task01-evaluation.md\n相关产物：output/ai-agent-memory/question-brief.md, output/ai-agent-memory/domain-map.md\nproject-lessons: output/ai-agent-memory/project-lessons.md\n\n请读取评估报告，修正所有必须修复的问题，并更新 project-lessons.md。不得引入输入文件未明确给出的个人/行业背景。完成后只返回简短确认和已更新路径。"}
+{"ts":"260507 182700","type":"agent_resumed","role":"mastery-builder","task":"task01","instance_id":"abc123","reason":"evaluation_failed","round":1,"instruction":"当前任务：task01 (Framing)\n评估报告：output/ai-agent-memory/_agent/review-reports/task01-evaluation.md\n相关产物：output/ai-agent-memory/deliverables/question-brief.md, output/ai-agent-memory/deliverables/domain-map.md\nproject-lessons: output/ai-agent-memory/_agent/project-lessons.md\n\n请读取评估报告，修正所有必须修复的问题，并更新 project-lessons.md。不得引入输入文件未明确给出的个人/行业背景。完成后只返回简短确认和已更新路径。"}
 ```
 
 ### `project_finished`
@@ -99,9 +100,9 @@ Recommended optional common fields:
 
 ---
 
-## State Snapshot: `state.json`
+## State Snapshot: `_run/state.json`
 
-`state.json` is overwritten whenever a meaningful state transition occurs.
+`_run/state.json` is overwritten whenever a meaningful state transition occurs.
 
 Example:
 
@@ -121,8 +122,8 @@ Example:
       "evaluator_id": "def456",
       "iterations": 1,
       "judgment": "PASS",
-      "outputs": ["question-brief.md", "domain-map.md"],
-      "report": "review-reports/task01-evaluation.md"
+      "outputs": ["deliverables/question-brief.md", "deliverables/domain-map.md"],
+      "report": "_agent/review-reports/task01-evaluation.md"
     },
     "task02": {
       "title": "Mastery Path",
@@ -131,8 +132,8 @@ Example:
       "evaluator_id": null,
       "iterations": 0,
       "judgment": null,
-      "outputs": ["learning-path.md", "exercises.md", "checkpoints.md"],
-      "report": "review-reports/task02-evaluation.md"
+      "outputs": ["deliverables/learning-path.md", "deliverables/exercises.md", "deliverables/checkpoints.md"],
+      "report": "_agent/review-reports/task02-evaluation.md"
     },
     "task03": {
       "title": "Application & Transfer",
@@ -141,8 +142,8 @@ Example:
       "evaluator_id": null,
       "iterations": 0,
       "judgment": null,
-      "outputs": ["application-plan.md", "transfer-plan.md"],
-      "report": "review-reports/task03-evaluation.md"
+      "outputs": ["deliverables/application-plan.md", "deliverables/transfer-plan.md"],
+      "report": "_agent/review-reports/task03-evaluation.md"
     }
   },
   "discipline": {
@@ -160,7 +161,7 @@ Example:
 
 ## Discipline Rules
 
-Never put these into `events.jsonl` or `state.json`:
+Never put these into `_run/events.jsonl` or `_run/state.json`:
 
 - learning source body
 - builder deliverable body
@@ -187,7 +188,7 @@ Allowed metadata:
 
 `tools/harness-visualizer.html` must work without a backend. First version supports local file upload of:
 
-- `events.jsonl`
-- optional `state.json`
+- `_run/events.jsonl`
+- optional `_run/state.json`
 
 If opened via a local static server, it may optionally fetch files by URL, but must not require that mode.

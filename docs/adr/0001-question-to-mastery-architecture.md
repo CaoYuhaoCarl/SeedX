@@ -78,25 +78,25 @@ The MVP uses three fixed task units:
 
 ```text
 Task 1: Framing
-- question-brief.md
-- domain-map.md
+- deliverables/question-brief.md
+- deliverables/domain-map.md
 
 Task 2: Mastery Path
-- learning-path.md
-- exercises.md
-- checkpoints.md
+- deliverables/learning-path.md
+- deliverables/exercises.md
+- deliverables/checkpoints.md
 
 Task 3: Application
-- application-plan.md
-- transfer-plan.md
+- deliverables/application-plan.md
+- deliverables/transfer-plan.md
 ```
 
 Each task has its own evaluation report:
 
 ```text
-review-reports/task01-evaluation.md
-review-reports/task02-evaluation.md
-review-reports/task03-evaluation.md
+_agent/review-reports/task01-evaluation.md
+_agent/review-reports/task02-evaluation.md
+_agent/review-reports/task03-evaluation.md
 ```
 
 The main agent only extracts:
@@ -155,12 +155,12 @@ Reasons:
 
 ---
 
-## Why Add `learning-contract.md`
+## Why Add `_agent/learning-contract.md`
 
 The harness introduces a central artifact:
 
 ```text
-learning-contract.md
+_agent/learning-contract.md
 ```
 
 It defines:
@@ -196,7 +196,8 @@ The following rules are non-negotiable:
 9. Same-task re-evaluation resumes the same evaluator.
 10. New tasks use fresh builder/evaluator instances.
 11. Output stays under `output/{PROJECT_NAME}/`.
-12. Logs are written to `run-log.md` using `yymmdd hhmm` format.
+12. Public learning artifacts are written under `deliverables/`; agent work files under `_agent/`; runtime logs/state under `_run/`.
+13. Logs are written to `_run/run-log.md` using `yymmdd hhmm` format.
 
 ---
 
@@ -220,7 +221,7 @@ The following rules are non-negotiable:
 ### Mitigations
 
 - Tune `reviewing-mastery-paths` first if evaluator is too loose.
-- Tune `designing-mastery-paths` and `learning-contract.md` if builder output is too generic.
+- Tune `designing-mastery-paths` and `_agent/learning-contract.md` if builder output is too generic.
 - Add new agent types only after smoke tests show a component is truly load-bearing.
 - Track future expansions in `docs/roadmap/ROADMAP.md`.
 

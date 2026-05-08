@@ -1,12 +1,12 @@
 # Run Log Format
 
-> `run-log.md` is the human-readable run log for Question-to-Mastery Harness. Machine-readable workflow data belongs in `events.jsonl` and `state.json`.
+> `_run/run-log.md` is the human-readable run log for Question-to-Mastery Harness. Machine-readable workflow data belongs in `_run/events.jsonl` and `_run/state.json`.
 
 ---
 
 ## Goals
 
-`run-log.md` should help the user quickly answer:
+`_run/run-log.md` should help the operator quickly answer:
 
 1. What project ran?
 2. What input path and output directory were used?
@@ -15,7 +15,7 @@
 5. Did each task PASS, FAIL, or require repair?
 6. Where are the output files and reports?
 
-It should not be a raw event dump. That is what `events.jsonl` is for.
+It should not be the learner-facing package. The question asker should read `README.md` and `deliverables/` first. It should also not be a raw event dump; that is what `_run/events.jsonl` is for.
 
 ---
 
@@ -57,37 +57,37 @@ It should not be a raw event dump. That is what `events.jsonl` is for.
 
 - Agent: `question-planner`
 - Input: source path only
-- Expected outputs: `learning-plan.md`, `learning-contract.md`, `learning-design-guide.md`, `project-lessons.md`
+- Expected outputs: `_agent/learning-plan.md`, `_agent/learning-contract.md`, `_agent/learning-design-guide.md`, `_agent/project-lessons.md`
 
 ### {yymmdd hhmm} — Planning Completed
 
 - Status: planned
 - Outputs:
-  - `learning-plan.md`
-  - `learning-contract.md`
-  - `learning-design-guide.md`
-  - `project-lessons.md`
+  - `_agent/learning-plan.md`
+  - `_agent/learning-contract.md`
+  - `_agent/learning-design-guide.md`
+  - `_agent/project-lessons.md`
 - Next: start `task01`
 
 ### {yymmdd hhmm} — task01 Framing: Build Started
 
 - Status: 🔄 building
 - Builder: new `mastery-builder` instance
-- Outputs expected: `question-brief.md`, `domain-map.md`
+- Outputs expected: `deliverables/question-brief.md`, `deliverables/domain-map.md`
 
 ### {yymmdd hhmm} — task01 Framing: Build Completed
 
 - Builder ID: `{BUILDER_ID_TASK01}`
 - Outputs written:
-  - `question-brief.md`
-  - `domain-map.md`
+  - `deliverables/question-brief.md`
+  - `deliverables/domain-map.md`
 - Next: evaluate task01
 
 ### {yymmdd hhmm} — task01 Framing: Evaluation Completed
 
 - Evaluator ID: `{EVALUATOR_ID_TASK01}`
 - Judgment: **PASS**
-- Report: `review-reports/task01-evaluation.md`
+- Report: `_agent/review-reports/task01-evaluation.md`
 - Round: 0
 
 ### {yymmdd hhmm} — task01 Framing: Task Completed
@@ -127,12 +127,15 @@ It should not be a raw event dump. That is what `events.jsonl` is for.
 
 | File | Reader | Purpose |
 |---|---|---|
-| `run-log.md` | Human | clear run narrative |
-| `events.jsonl` | Machine / visualizer | append-only event stream |
-| `state.json` | Machine / visualizer | current state snapshot |
+| `README.md` | Human | path-only entrypoint to public and internal files |
+| `deliverables/` | Question asker / learner | final learning package |
+| `_agent/` | Agents / evaluator | contract, design guide, lessons, reports |
+| `_run/run-log.md` | Operator | clear run narrative |
+| `_run/events.jsonl` | Machine / visualizer | append-only event stream |
+| `_run/state.json` | Machine / visualizer | current state snapshot |
 
 If the same information appears in both files, prefer:
 
-- `run-log.md`: readable summary
-- `events.jsonl`: structured event
-- `state.json`: latest snapshot
+- `_run/run-log.md`: readable summary
+- `_run/events.jsonl`: structured event
+- `_run/state.json`: latest snapshot

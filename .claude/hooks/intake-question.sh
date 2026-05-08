@@ -3,6 +3,8 @@
 #
 # Routes UserPromptSubmit prompts into the Question-to-Mastery flow:
 #   +ask <body>          → save body to input/questions/, launch in same turn (B mode)
+#   +ask:<body>          → same as +ask <body>
+#   +ask：<body>         → same as +ask <body> (Chinese full-width colon)
 #   +ask                 → read clipboard via pbpaste, save, launch (A1 strict)
 #   +ask-strict <body>   → save body, BLOCK original prompt, await +start (A2 strict)
 #   +start [path]        → launch from given path, or most recent question file
@@ -63,7 +65,7 @@ emit_launch() {
   jq -n --arg p "$rel_path" --arg cwd "$CWD" '{
     hookSpecificOutput: {
       hookEventName: "UserPromptSubmit",
-      additionalContext: ("学习问题路径：\($p)\n\n请严格按当前工作区 CLAUDE.md 执行：\n- 当前工作区：\($cwd)\n- 学习问题路径作为输入；handoff prompt 必须使用 §7 模板，严禁在 subagent prompt 中复述、改写或引用问题正文\n- 不得把输出目录设置为输入文件所在文件夹\n- 默认保持通用学习者视角；只有输入文件显式提供的背景、目标、场景和约束才能进入 learning-contract 与产物\n- 初始化后创建 run-log.md、events.jsonl、state.json，然后启动 question-planner subagent")
+      additionalContext: ("HARNESS_LAUNCH_TRIGGER\n学习问题路径：\($p)\n\n请严格按当前工作区 CLAUDE.md 执行：\n- 当前用户消息是 harness 触发器，不是普通问答请求；不要直接回答、总结或解决原始学习问题\n- 当前工作区：\($cwd)\n- 立即进入 Question-to-Mastery 编排流程；主 Agent 只初始化、调度、记录状态，不生产学习产物\n- 学习问题路径作为输入；handoff prompt 必须使用 §7 模板，严禁在 subagent prompt 中复述、改写或引用问题正文\n- 不得把输出目录设置为输入文件所在文件夹\n- 默认保持通用学习者视角；只有输入文件显式提供的背景、目标、场景和约束才能进入 learning-contract 与产物\n- 初始化后创建 README.md、_run/run-log.md、_run/events.jsonl、_run/state.json，然后启动 question-planner subagent")
     }
   }'
 }
@@ -84,20 +86,20 @@ save_body() {
 }
 
 # Strip a literal prefix from PROMPT, plus following whitespace and/or colons.
-# Accepts '+ask <body>', '+ask: <body>', '+ask:<body>' as equivalent.
+# Accepts '+ask <body>', '+ask: <body>', '+ask:<body>', and '+ask：<body>'.
 # perl \Q...\E escapes regex specials in prefix.
-# Note: char class [\s:] avoids '|' alternation which would clash with perl's
+# Note: char class [\s:：] avoids '|' alternation which would clash with perl's
 # s|...|...| delimiter.
 strip_prefix() {
   local prefix="$1"
-  printf '%s' "$PROMPT" | perl -0777 -pe "s|^\\Q${prefix}\\E[\\s:]+||"
+  printf '%s' "$PROMPT" | perl -0777 -pe "s|^\\Q${prefix}\\E[\\s:：]+||"
 }
 
 # ---------------------------------------------------------------------------
 # +ask-strict <body>  — save then BLOCK; user must follow up with +start
 # ---------------------------------------------------------------------------
-if [[ "$PROMPT" =~ ^[+]ask-strict([[:space:]:]|$) ]]; then
-  if [[ "$PROMPT" =~ ^[+]ask-strict:?[[:space:]]*$ ]]; then
+if [[ "$PROMPT" =~ ^[+]ask-strict([[:space:]:：]|$) ]]; then
+  if [[ "$PROMPT" =~ ^[+]ask-strict[:：]?[[:space:]]*$ ]]; then
     emit_block "❌ \`+ask-strict\` 需要附带问题正文：\`+ask-strict <问题正文>\`"
     exit 0
   fi
@@ -114,8 +116,8 @@ fi
 #   with body  → B mode: save + launch in same turn (relaxed §1.2)
 #   no body    → A1 mode: pbpaste + save + launch (clipboard, strict)
 # ---------------------------------------------------------------------------
-if [[ "$PROMPT" =~ ^[+]ask([[:space:]:]|$) ]]; then
-  if [[ "$PROMPT" =~ ^[+]ask:?[[:space:]]*$ ]]; then
+if [[ "$PROMPT" =~ ^[+]ask([[:space:]:：]|$) ]]; then
+  if [[ "$PROMPT" =~ ^[+]ask[:：]?[[:space:]]*$ ]]; then
     if ! command -v pbpaste >/dev/null 2>&1; then
       emit_block "❌ 剪贴板模式需要 \`pbpaste\`（macOS）。请用 \`+ask <问题正文>\` 或 \`+ask-strict <问题正文>\`。"
       exit 0
@@ -136,9 +138,9 @@ fi
 # ---------------------------------------------------------------------------
 # +start [path]  — explicit launch from given path or most recent
 # ---------------------------------------------------------------------------
-if [[ "$PROMPT" =~ ^[+]start([[:space:]:]|$) ]]; then
+if [[ "$PROMPT" =~ ^[+]start([[:space:]:：]|$) ]]; then
   path_arg=""
-  if [[ "$PROMPT" =~ ^[+]start[[:space:]:]+(.+)$ ]]; then
+  if [[ "$PROMPT" =~ ^[+]start[[:space:]:：]+(.+)$ ]]; then
     path_arg="${BASH_REMATCH[1]}"
     path_arg="${path_arg%"${path_arg##*[![:space:]]}"}"
   fi

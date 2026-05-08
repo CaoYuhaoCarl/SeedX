@@ -22,8 +22,8 @@
 
 1. **不改变核心 Harness 流程**：可视化层只观察，不参与决策。
 2. **事件日志优先**：所有状态先写入机器可读事件文件，再由 UI 展示。
-3. **Markdown 继续保留**：`run-log.md` 仍然是人类可读日志。
-4. **JSONL 作为实时数据源**：新增 `events.jsonl`，每行一个事件，方便增量读取。
+3. **Markdown 继续保留**：`_run/run-log.md` 仍然是人类可读日志。
+4. **JSONL 作为实时数据源**：新增 `_run/events.jsonl`，每行一个事件，方便增量读取。
 5. **先静态/半实时，再实时**：MVP 不需要 WebSocket，先用浏览器定时轮询本地 JSONL。
 6. **不暴露产物正文**：可视化 UI 展示路径、状态、判定，不展示学习产物全文。
 
@@ -35,9 +35,10 @@
 
 ```text
 output/{PROJECT_NAME}/
-├── run-log.md             # 人类可读日志，继续保留
-├── events.jsonl            # 机器可读事件流，新增
-├── state.json              # 当前状态快照，新增，可选
+└── _run/
+    ├── run-log.md          # 人类可读日志，继续保留
+    ├── events.jsonl        # 机器可读事件流，新增
+    └── state.json          # 当前状态快照，新增，可选
 └── visualizer.html         # 单文件可视化面板，新增，可选
 ```
 
@@ -50,7 +51,7 @@ tools/
 
 ---
 
-## 4. events.jsonl 事件协议
+## 4. _run/events.jsonl 事件协议
 
 每行一个 JSON object：
 
@@ -69,7 +70,7 @@ tools/
 
 ```json
 {"ts":"260507 1815","type":"agent_started","role":"question-planner","task":"planning"}
-{"ts":"260507 1818","type":"agent_finished","role":"question-planner","task":"planning","outputs":["learning-plan.md","learning-contract.md","learning-design-guide.md"]}
+{"ts":"260507 1818","type":"agent_finished","role":"question-planner","task":"planning","outputs":["_agent/learning-plan.md","_agent/learning-contract.md","_agent/learning-design-guide.md"]}
 ```
 
 ### 4.3 Builder 事件
@@ -83,7 +84,7 @@ tools/
 
 ```json
 {"ts":"260507 1824","type":"agent_started","role":"learning-evaluator","task":"task01","instance_id":"def456"}
-{"ts":"260507 1826","type":"evaluation_finished","role":"learning-evaluator","task":"task01","instance_id":"def456","report":"review-reports/task01-evaluation.md","judgment":"FAIL"}
+{"ts":"260507 1826","type":"evaluation_finished","role":"learning-evaluator","task":"task01","instance_id":"def456","report":"_agent/review-reports/task01-evaluation.md","judgment":"FAIL"}
 ```
 
 ### 4.5 Resume 事件
@@ -101,9 +102,9 @@ tools/
 
 ---
 
-## 5. state.json 快照协议
+## 5. _run/state.json 快照协议
 
-`events.jsonl` 是历史流，`state.json` 是当前状态，便于 UI 快速加载。
+`_run/events.jsonl` 是历史流，`_run/state.json` 是当前状态，便于 UI 快速加载。
 
 示例：
 
@@ -196,9 +197,9 @@ Same-task evaluator resumed: YES ✅
 
 最小实现：
 
-1. 在 `CLAUDE.md` 日志规范中新增：每写 `run-log.md` 时，也追加一行 `events.jsonl`。
+1. 在 `CLAUDE.md` 日志规范中新增：每写 `_run/run-log.md` 时，也追加一行 `_run/events.jsonl`。
 2. 创建 `tools/harness-visualizer.html`。
-3. visualizer 用浏览器 `fetch()` 定时读取 `events.jsonl`。
+3. visualizer 用浏览器 `fetch()` 定时读取 `_run/events.jsonl`。
 4. UI 展示：
    - 项目状态
    - 任务卡片
@@ -275,7 +276,7 @@ mcp-learning-path
 
 ```text
 1. v0.2 Rubric Calibration
-2. v0.2-observability events.jsonl + visualizer.html
+2. v0.2-observability _run/events.jsonl + visualizer.html
 3. v0.3 Contract Calibration
 ```
 

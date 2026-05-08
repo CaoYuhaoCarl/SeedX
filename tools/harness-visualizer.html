@@ -428,7 +428,7 @@
       </div>
       <div class="control">
         <label>Direct URL</label>
-        <input id="urlInput" name="urlInput" type="text" autocomplete="off" placeholder="../output/PROJECT/events.jsonl">
+        <input id="urlInput" name="urlInput" type="text" autocomplete="off" placeholder="../output/PROJECT/_run/events.jsonl">
         <button class="btn" id="loadUrl" type="button">Load</button>
       </div>
       <div class="hint" id="loadStatus">Initializing…</div>
@@ -453,9 +453,9 @@ const $ = id => document.getElementById(id);
 let events = []; let state = null;
 
 const taskDefaults = {
-  task01:{title:'Framing',     status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['question-brief.md','domain-map.md'],report:'review-reports/task01-evaluation.md'},
-  task02:{title:'Mastery Path',status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['learning-path.md','exercises.md','checkpoints.md'],report:'review-reports/task02-evaluation.md'},
-  task03:{title:'Application & Transfer', status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['application-plan.md','transfer-plan.md'],report:'review-reports/task03-evaluation.md'}
+  task01:{title:'Framing',     status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['deliverables/question-brief.md','deliverables/domain-map.md'],report:'_agent/review-reports/task01-evaluation.md'},
+  task02:{title:'Mastery Path',status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['deliverables/learning-path.md','deliverables/exercises.md','deliverables/checkpoints.md'],report:'_agent/review-reports/task02-evaluation.md'},
+  task03:{title:'Application & Transfer', status:'⏳',builder_id:null,evaluator_id:null,iterations:0,judgment:null,outputs:['deliverables/application-plan.md','deliverables/transfer-plan.md'],report:'_agent/review-reports/task03-evaluation.md'}
 };
 
 const escapeHtml = s => String(s??'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -516,6 +516,15 @@ $('projectSelect').addEventListener('change', e=>{
 
 async function fetchText(url){ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) throw new Error(res.status+' '+url); return res.text(); }
 function projectBase(name){ return `../output/${encodeURIComponent(name)}/`; }
+function runUrls(base, file){ return [`${base}_run/${file}`, `${base}${file}`]; }
+async function fetchFirst(urls){
+  let lastErr = null;
+  for(const url of urls){
+    try{ return {url, text:await fetchText(url)}; }
+    catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error('no URL candidates');
+}
 function setProjectOptions(){
   const sel = $('projectSelect');
   sel.innerHTML = projects.map(p=>`<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}${p.pending?' (waiting)':''}</option>`).join('');
@@ -528,7 +537,7 @@ function waitForRequestedProject(reason){
   projects = [currentProject];
   setProjectOptions();
   $('loadStatus').textContent = `Waiting for output/${requestedProject}/ ...`;
-  setRefreshStatus(reason || 'Waiting for events.jsonl + state.json');
+  setRefreshStatus(reason || 'Waiting for _run/events.jsonl + _run/state.json');
   render();
   startAuto();
   return true;
@@ -554,7 +563,7 @@ async function scanProjects(userTriggered){
     let pick = wanted && projects.find(p=>p.name===wanted);
     if(!pick){
       const probes = await Promise.all(projects.map(async p=>{
-        try{ const t = await fetchText(p.base+'state.json'); const j=JSON.parse(t); return {p, ts:j.updated_at||''}; }
+        try{ const r = await fetchFirst(runUrls(p.base,'state.json')); const j=JSON.parse(r.text); return {p, ts:j.updated_at||''}; }
         catch(_){ return {p, ts:''}; }
       }));
       probes.sort((a,b)=> (b.ts||'').localeCompare(a.ts||''));
@@ -578,7 +587,8 @@ async function refreshOnce(){
   if(!currentProject) return;
   const base = currentProject.base; let changed=false;
   try{
-    const t = await fetchText(base+'events.jsonl');
+    const r = await fetchFirst(runUrls(base,'events.jsonl'));
+    const t = r.text;
     if(currentProject.pending){
       currentProject.pending = false;
       setProjectOptions();
@@ -586,12 +596,13 @@ async function refreshOnce(){
     }
     if(t !== lastEventsText){ lastEventsText=t; events=parseJsonl(t); changed=true; }
   }catch(e){
-    const prefix = currentProject.pending ? `${currentProject.name} · waiting for events.jsonl/state.json` : 'events.jsonl 加载失败';
+    const prefix = currentProject.pending ? `${currentProject.name} · waiting for _run/events.jsonl + _run/state.json` : '_run/events.jsonl 加载失败';
     setRefreshStatus(`${prefix}：${e.message}`);
     return;
   }
   try{
-    const t = await fetchText(base+'state.json');
+    const r = await fetchFirst(runUrls(base,'state.json'));
+    const t = r.text;
     if(t !== lastStateText){ lastStateText=t; try{ state=JSON.parse(t); changed=true; }catch(_){} }
   }catch(_){ /* state is optional */ }
   if(changed) render();
@@ -774,11 +785,11 @@ function currentLive(s){
   if(role==='question-planner'){
     action = 'Read only the learning-source path and produce the planning contract.';
     input = [fileName(s.source)||'source path'];
-    output = ['learning-plan.md','learning-contract.md','learning-design-guide.md','project-lessons.md','review-reports/'];
+    output = ['_agent/learning-plan.md','_agent/learning-contract.md','_agent/learning-design-guide.md','_agent/project-lessons.md','_agent/review-reports/'];
     guards = ['explicit input only','planner may read source','main only passes path'];
   }else if(role==='mastery-builder'){
     action = 'Generate this task’s required learning artifacts from contract + design guide.';
-    input = ['learning-contract.md','learning-design-guide.md','project-lessons.md'];
+    input = ['_agent/learning-contract.md','_agent/learning-design-guide.md','_agent/project-lessons.md'];
     output = (task && task.outputs) || [];
     guards = ['do not invent external background','write only target artifacts','return paths only'];
   }else if(role==='learning-evaluator'){
@@ -787,9 +798,9 @@ function currentLive(s){
     output = [task && task.report || 'review report'];
     guards = ['read-only except report','check explicit-input-only','return verdict + report path'];
   }else{
-    action = 'Dispatch/resume subagents, capture IDs, and update events/state/run-log.';
+    action = 'Dispatch/resume subagents, capture IDs, and update _run events/state/run-log.';
     input = s.current_task ? [`current task: ${s.current_task}`] : [fileName(s.source)||'source path'];
-    output = ['events.jsonl','state.json','run-log.md'];
+    output = ['_run/events.jsonl','_run/state.json','_run/run-log.md'];
     guards = ['do not read source body','do not read deliverables','grep verdict only'];
   }
 
@@ -806,7 +817,7 @@ function flowForLive(live, s){
   let next = 'returns paths / verdict';
 
   if(live.role==='main-agent'){
-    receiver = {label:'Main Agent', sub:'updates run-log, events.jsonl, state.json', cls:'receiver main'};
+    receiver = {label:'Main Agent', sub:'updates _run/run-log, events.jsonl, state.json', cls:'receiver main'};
     waiting = {label:'Next Dispatch', sub:s.current_task ? `task ${s.current_task}` : 'planning or next task', cls:'waiting'};
     edge = 'state update';
     next = 'choose next agent';
@@ -830,15 +841,15 @@ function handoffInstruction({role, taskId, task, s, input, output}){
   const outputs = (output||[]).join(', ') || '—';
   const outputPaths = (output||[]).map(o => `${outputDir}/${o}`.replace(/\/+/g,'/')).join('\n- ') || '—';
   if(role==='question-planner'){
-    return `学习问题路径：${s.source || '{LEARNING_SOURCE_FILE}'}\n输出目录：${outputDir}\n\n请读取学习问题和 designing-mastery-paths skill，按 explicit-input-only 个性化原则产出 learning-plan.md、learning-contract.md、learning-design-guide.md、project-lessons.md，并创建 review-reports/。完成后只返回文件路径列表。`;
+    return `学习问题路径：${s.source || '{LEARNING_SOURCE_FILE}'}\n输出目录：${outputDir}\n\n请读取学习问题和 designing-mastery-paths skill，按 explicit-input-only 个性化原则产出 _agent/learning-plan.md、_agent/learning-contract.md、_agent/learning-design-guide.md、_agent/project-lessons.md，并创建 _agent/review-reports/。完成后只返回文件路径列表。`;
   }
   if(role==='mastery-builder'){
-    return `当前任务：${taskId} (${title})\nlearning-contract: ${outputDir}/learning-contract.md\nlearning-design-guide: ${outputDir}/learning-design-guide.md\nproject-lessons: ${outputDir}/project-lessons.md\n输出目录：${outputDir}\n指定产物：${outputs}\n\n请按当前任务生成指定学习产物。只使用 learning-contract 中显式记录的学习者背景和应用场景，不得引入默认个人/行业/职业/产品/身份背景。完成后只返回产物路径列表。`;
+    return `当前任务：${taskId} (${title})\nlearning-contract: ${outputDir}/_agent/learning-contract.md\nlearning-design-guide: ${outputDir}/_agent/learning-design-guide.md\nproject-lessons: ${outputDir}/_agent/project-lessons.md\n输出目录：${outputDir}\n指定产物：${outputs}\n\n请按当前任务生成指定学习产物。只使用 learning-contract 中显式记录的学习者背景和应用场景，不得引入默认个人/行业/职业/产品/身份背景。完成后只返回产物路径列表。`;
   }
   if(role==='learning-evaluator'){
-    return `当前任务：${taskId} (${title})\nlearning-contract: ${outputDir}/learning-contract.md\n待评估产物：\n- ${outputPaths}\n输出报告：${outputDir}/${task && task.report || 'review-reports/taskNN-evaluation.md'}\n\n请按 reviewing-mastery-paths skill 独立评估，检查是否只使用输入显式提供的个性化背景，写入报告，并只返回 PASS/FAIL 和报告路径。`;
+    return `当前任务：${taskId} (${title})\nlearning-contract: ${outputDir}/_agent/learning-contract.md\n待评估产物：\n- ${outputPaths}\n输出报告：${outputDir}/${task && task.report || '_agent/review-reports/taskNN-evaluation.md'}\n\n请按 reviewing-mastery-paths skill 独立评估，检查是否只使用输入显式提供的个性化背景，写入报告，并只返回 PASS/FAIL 和报告路径。`;
   }
-  return `Main Agent orchestration step\ncurrent_task: ${s.current_task || taskId || '—'}\nsource_path: ${s.source || '—'}\noutput_dir: ${outputDir}\n\n执行约束：只调度和维护状态；不读取学习问题正文、不读取 Builder 产物正文、不读取完整评估报告；只通过路径、agent IDs、PASS/FAIL 判定、events.jsonl/state.json/run-log.md 维护 harness。`;
+  return `Main Agent orchestration step\ncurrent_task: ${s.current_task || taskId || '—'}\nsource_path: ${s.source || '—'}\noutput_dir: ${outputDir}\n\n执行约束：只调度和维护状态；不读取学习问题正文、不读取 Builder 产物正文、不读取完整评估报告；只通过路径、agent IDs、PASS/FAIL 判定、_run/events.jsonl、_run/state.json、_run/run-log.md 维护 harness。`;
 }
 
 function chips(items, kind){

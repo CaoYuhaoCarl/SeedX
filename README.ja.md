@@ -42,10 +42,12 @@ Claude Code にこう打つだけ：
 +ask <学習質問の本文>
 ```
 
+`+ask:<本文>` と `+ask：<本文>` も使えます。コロン以降はサブコマンド名ではなく、質問本文として扱われます。
+
 `UserPromptSubmit` hook が自動で：
 - 質問本文を `input/questions/question-<タイムスタンプ>.md` に保存
-- パスと起動指示を注入し、オーケストレーターが即座に開始
-- Harness Visualizer をバックグラウンドで開き、この run の `events.jsonl` + `state.json` を待機
+- パスと起動指示を注入し、メイン Agent は元の Q&A 意味を無視してオーケストレーターを開始
+- Harness Visualizer をバックグラウンドで開き、この run の `_run/events.jsonl` + `_run/state.json` を待機
 
 プロジェクト名と出力ディレクトリはファイル名から自動推測されるため、ほかに記入は不要です。
 
@@ -75,7 +77,7 @@ Claude Code にこう打つだけ：
 - 学習質問パスは入力専用です。出力ディレクトリを入力ファイルのあるフォルダに設定しないでください
 - すべての生成物を出力ディレクトリに書き込んでください
 - デフォルトでは汎用的な学習者視点を維持してください。入力ファイルに明示された背景、目標、シーン、制約だけを learning-contract と成果物に反映できます
-- 初期化後、run-log.md、events.jsonl、state.json を作成し、question-planner subagent を起動してください
+- 初期化後、`README.md`、`_run/run-log.md`、`_run/events.jsonl`、`_run/state.json` を作成し、question-planner subagent を起動してください
 ```
 
 入力例は `input/questions/` にあります。
@@ -88,25 +90,31 @@ Claude Code にこう打つだけ：
 
 ```text
 output/{project-name}/
-├── learning-plan.md           # 実行計画
-├── learning-contract.md       # Builder/Evaluator 共通の学習契約
-├── learning-design-guide.md   # 設計ガイド
-├── question-brief.md          # 質問概要
-├── domain-map.md              # ドメインマップ
-├── learning-path.md           # 学習パス
-├── exercises.md               # 演習
-├── checkpoints.md             # チェックポイント
-├── application-plan.md        # 応用計画
-├── transfer-plan.md           # 転移計画
-├── project-lessons.md         # タスク横断の学び
-├── run-log.md                 # 人間が読める実行ログ
-├── events.jsonl               # 可視化パネル用イベントストリーム
-├── state.json                 # 現在状態のスナップショット
-└── review-reports/
-    ├── task01-evaluation.md
-    ├── task02-evaluation.md
-    └── task03-evaluation.md
+├── README.md                  # パス索引。質問者はここから読む
+├── deliverables/              # 学習者の標準閲覧先
+│   ├── question-brief.md
+│   ├── domain-map.md
+│   ├── learning-path.md
+│   ├── exercises.md
+│   ├── checkpoints.md
+│   ├── application-plan.md
+│   └── transfer-plan.md
+├── _agent/                    # agent 作業ファイル。標準閲覧先ではない
+│   ├── learning-plan.md
+│   ├── learning-contract.md
+│   ├── learning-design-guide.md
+│   ├── project-lessons.md
+│   └── review-reports/
+│       ├── task01-evaluation.md
+│       ├── task02-evaluation.md
+│       └── task03-evaluation.md
+└── _run/                      # 実行状態と可視化データ
+    ├── run-log.md
+    ├── events.jsonl
+    └── state.json
 ```
+
+分類ルールは [`docs/specs/output-artifact-layout.md`](docs/specs/output-artifact-layout.md) を参照してください。
 
 ---
 
@@ -114,9 +122,9 @@ output/{project-name}/
 
 | Task | 名前 | Builder の出力 | 評価レポート |
 |---|---|---|---|
-| task01 | Framing | `question-brief.md`, `domain-map.md` | `review-reports/task01-evaluation.md` |
-| task02 | Mastery Path | `learning-path.md`, `exercises.md`, `checkpoints.md` | `review-reports/task02-evaluation.md` |
-| task03 | Application & Transfer | `application-plan.md`, `transfer-plan.md` | `review-reports/task03-evaluation.md` |
+| task01 | Framing | `deliverables/question-brief.md`, `deliverables/domain-map.md` | `_agent/review-reports/task01-evaluation.md` |
+| task02 | Mastery Path | `deliverables/learning-path.md`, `deliverables/exercises.md`, `deliverables/checkpoints.md` | `_agent/review-reports/task02-evaluation.md` |
+| task03 | Application & Transfer | `deliverables/application-plan.md`, `deliverables/transfer-plan.md` | `_agent/review-reports/task03-evaluation.md` |
 
 タスクは `task01 → task02 → task03` の固定順で実行されます。各タスクは Build の後に Evaluate されます。PASS なら次のタスクへ進み、FAIL なら最大 2 回の修正ループに入ります。
 
@@ -155,10 +163,10 @@ output/{project-name}/
 
 ## Observability 可視化
 
-v0.2 では軽量な観測レイヤーが追加されました。学習成果物の本文は読まず、実行状態だけを表示します。`+ask` / `+start` で起動すると、intake hook がパネルをバックグラウンドで開き、この run の `events.jsonl` + `state.json` を待機・ポーリングします。
+v0.2 では軽量な観測レイヤーが追加されました。学習成果物の本文は読まず、実行状態だけを表示します。`+ask` / `+start` で起動すると、intake hook がパネルをバックグラウンドで開き、この run の `_run/events.jsonl` + `_run/state.json` を待機・ポーリングします。
 
 ```bash
-# 指定プロジェクトの events.jsonl + state.json を読み込み、2 秒ごとに更新するパネルを開く
+# 指定プロジェクトの _run/events.jsonl + _run/state.json を読み込み、2 秒ごとに更新するパネルを開く
 ./tools/open-visualizer.sh {project-name}
 
 # プロジェクト名を省略すると、output/ 以下の最新プロジェクトを自動選択
@@ -195,7 +203,7 @@ v0.2 では軽量な観測レイヤーが追加されました。学習成果物
 
 **成果物が特定のユーザーや業界を誤って仮定している場合:**
 1. 入力ファイルがその背景を本当に提供しているか確認します。
-2. `learning-contract.md` の「学習者背景と応用シーン」を確認します。
+2. `_agent/learning-contract.md` の「学習者背景と応用シーン」を確認します。
 3. 最後に `reviewing-mastery-paths` の `User Context Fit` ハードゲートを調整します。
 
 各コンポーネントは、複雑性を増やす前に、それ自体が load-bearing であることを示す必要があります。
