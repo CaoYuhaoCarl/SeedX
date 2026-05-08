@@ -2,11 +2,11 @@
 # Question-to-Mastery intake hook
 #
 # Routes UserPromptSubmit prompts into the Question-to-Mastery flow:
-#   +ask <body>          → save body to input/questions/, launch in same turn (B mode)
+#   +ask                 → read clipboard via pbpaste, save, launch (one-step strict)
+#   +ask <body>          → save body, BLOCK original prompt, await +start
 #   +ask:<body>          → same as +ask <body>
 #   +ask：<body>         → same as +ask <body> (Chinese full-width colon)
-#   +ask                 → read clipboard via pbpaste, save, launch (A1 strict)
-#   +ask-strict <body>   → save body, BLOCK original prompt, await +start (A2 strict)
+#   +ask-strict <body>   → same as inline +ask body
 #   +start [path]        → launch from given path, or most recent question file
 #
 # Anything else is passed through untouched.
@@ -96,7 +96,7 @@ strip_prefix() {
 }
 
 # ---------------------------------------------------------------------------
-# +ask-strict <body>  — save then BLOCK; user must follow up with +start
+# +ask-strict <body>  — save then BLOCK; user must follow up with +start.
 # ---------------------------------------------------------------------------
 if [[ "$PROMPT" =~ ^[+]ask-strict([[:space:]:：]|$) ]]; then
   if [[ "$PROMPT" =~ ^[+]ask-strict[:：]?[[:space:]]*$ ]]; then
@@ -105,21 +105,22 @@ if [[ "$PROMPT" =~ ^[+]ask-strict([[:space:]:：]|$) ]]; then
   fi
   body=$(strip_prefix "+ask-strict")
   rel=$(save_body "$body")
-  emit_block "✅ 严格模式：问题已落盘到 \`$rel\`，原始消息已被 block，正文未进入主 Agent context。
+  emit_block "✅ 问题已落盘到 \`$rel\`，原始消息已被 block，正文未进入主 Agent context。
 
-下一步：发送 \`+start\` 启动编排器（或 \`+start $rel\` 显式指定）。"
+下一步：发送 \`+start $rel\` 启动编排器。"
   exit 0
 fi
 
 # ---------------------------------------------------------------------------
 # +ask [body]
-#   with body  → B mode: save + launch in same turn (relaxed §1.2)
-#   no body    → A1 mode: pbpaste + save + launch (clipboard, strict)
+#   no body    → clipboard mode: pbpaste + save + launch in the same turn.
+#   with body  → save + block. Inline body is visible to the main agent, so
+#                same-turn launch is deliberately disabled to avoid Q&A drift.
 # ---------------------------------------------------------------------------
 if [[ "$PROMPT" =~ ^[+]ask([[:space:]:：]|$) ]]; then
   if [[ "$PROMPT" =~ ^[+]ask[:：]?[[:space:]]*$ ]]; then
     if ! command -v pbpaste >/dev/null 2>&1; then
-      emit_block "❌ 剪贴板模式需要 \`pbpaste\`（macOS）。请用 \`+ask <问题正文>\` 或 \`+ask-strict <问题正文>\`。"
+      emit_block "❌ 剪贴板模式需要 \`pbpaste\`（macOS）。请用 \`+ask <问题正文>\` 先落盘，再发送 \`+start\`。"
       exit 0
     fi
     body=$(pbpaste)
@@ -127,11 +128,20 @@ if [[ "$PROMPT" =~ ^[+]ask([[:space:]:：]|$) ]]; then
       emit_block "❌ 剪贴板为空。请先复制问题正文，再发送 \`+ask\`。"
       exit 0
     fi
+    rel=$(save_body "$body")
+    emit_launch "$rel"
+    exit 0
   else
     body=$(strip_prefix "+ask")
   fi
   rel=$(save_body "$body")
-  emit_launch "$rel"
+  emit_block "✅ 问题已落盘到 \`$rel\`。
+
+为避免主 Agent 把 inline 正文当作普通问答直接回答，本消息已被 block。
+
+下一步：发送 \`+start $rel\` 启动编排器。
+
+想要一键启动：先复制问题正文到剪贴板，然后只发送 \`+ask\`。"
   exit 0
 fi
 
@@ -146,12 +156,12 @@ if [[ "$PROMPT" =~ ^[+]start([[:space:]:：]|$) ]]; then
   fi
   if [[ -z "$path_arg" ]]; then
     if [[ ! -d "$QUESTIONS_DIR" ]]; then
-      emit_block "❌ 不存在 \`input/questions/\` 目录。先用 \`+ask <body>\` 或 \`+ask-strict <body>\` 落盘问题。"
+      emit_block "❌ 不存在 \`input/questions/\` 目录。先复制问题正文后发送 \`+ask\`，或用 \`+ask <body>\` 落盘问题。"
       exit 0
     fi
     latest=$(ls -t "$QUESTIONS_DIR"/*.md 2>/dev/null | head -1 || true)
     if [[ -z "$latest" ]]; then
-      emit_block "❌ \`input/questions/\` 中没有问题文件。先用 \`+ask <body>\` 或 \`+ask-strict <body>\`。"
+      emit_block "❌ \`input/questions/\` 中没有问题文件。先复制问题正文后发送 \`+ask\`，或用 \`+ask <body>\` 落盘问题。"
       exit 0
     fi
     path_arg="${latest#$CWD/}"

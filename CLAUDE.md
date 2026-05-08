@@ -23,8 +23,9 @@
    - 但严禁在任何 subagent handoff prompt、`_run/run-log.md`、`_run/events.jsonl`、`_run/state.json` 中复述、改写、引用或粘贴问题正文。
    - 所有 handoff 必须严格使用 §7 中的模板，仅传递路径与协议字段。
    - **隔离强度可调**：
-     - **结构性隔离（默认）**：handoff 模板兜底；正文可以在 intake 阶段进入主 Agent context。
-     - **绝对隔离（可选）**：通过 `+ask`（剪贴板）或 `+ask-strict <body>` + `+start` 触发；问题正文从不进入主 Agent context，适用于 PII / 商业机密等敏感场景。
+     - **绝对隔离一键模式（推荐）**：先复制正文到剪贴板，再发送 `+ask`；hook 通过 `pbpaste` 落盘并启动，问题正文不进入主 Agent context。
+     - **inline 安全模式**：发送 `+ask <body>` / `+ask:<body>` / `+ask：<body>` / `+ask-strict <body>` 时，hook 只落盘并 block 原消息；必须再发送 `+start <path>` 启动，避免主 Agent 看到正文后直接回答。
+     - **手动结构性隔离（高级）**：用户直接提供学习问题路径和启动指令；handoff 模板兜底，但正文不应进入 handoff、log、event、state。
 
 3. **文件即记忆**
    - 所有 Planner / Builder / Evaluator 产出必须写入文件。

@@ -36,20 +36,20 @@ By default, the system is not bound to any specific user, industry, profession, 
 
 ### Slash trigger (recommended)
 
-Just type into Claude Code:
+Copy the learning question body to your clipboard, then type into Claude Code:
 
 ```text
-+ask <your learning question body>
++ask
 ```
 
-`+ask:<body>` and `+ask：<body>` are also accepted; anything after the colon is treated as the question body, not as a subcommand name.
-
 A `UserPromptSubmit` hook will:
-- Save the question body to `input/questions/question-<timestamp>.md`
-- Inject the path and launch instruction so the main agent ignores the original Q&A semantics and starts the orchestrator
+- Read the clipboard body via `pbpaste` and save it to `input/questions/question-<timestamp>.md`
+- Inject the path and launch instruction so the main agent never sees the original body and starts the orchestrator
 - Open Harness Visualizer in the background and wait for this run's `_run/events.jsonl` + `_run/state.json`
 
 Project name and output directory are auto-derived from the filename — nothing else to fill in.
+
+If you send `+ask <body>` / `+ask:<body>` / `+ask：<body>` inline, the hook saves the body and blocks the original message; then follow the shown `+start <path>` prompt. This prevents the main agent from seeing inline text and treating it as a normal Q&A request.
 
 ### Strict isolation modes (for sensitive questions)
 
@@ -58,10 +58,10 @@ When the question contains PII, trade secrets, or you want to maximize "main age
 | Trigger | Behavior | UX |
 |---|---|---|
 | `+ask` (copy the body to clipboard first; no inline body) | Read via `pbpaste`, save, and launch | 1 step |
-| `+ask-strict <body>` | Save and block the original message; orchestrator only starts after you send `+start` | 2 steps |
+| `+ask <body>` / `+ask:<body>` / `+ask：<body>` / `+ask-strict <body>` | Save and block the original message; orchestrator only starts after you send `+start` | 2 steps |
 | `+start [path]` | Launch with explicit path, or the most recent question file | — |
 
-Clipboard and strict modes have the same isolation strength — the body never enters the main agent's context. They differ only in UX. See [CLAUDE.md §1.2](CLAUDE.md) for the isolation contract.
+Clipboard mode launches in one step while keeping the body out of the main agent's context. Inline modes are blocked first because the body is already visible in the original user message. See [CLAUDE.md §1.2](CLAUDE.md) for the isolation contract.
 
 ### Manual launch (advanced)
 
