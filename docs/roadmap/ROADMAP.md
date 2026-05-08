@@ -295,6 +295,27 @@ scenario-based-activity.md
 
 ---
 
+## v0.9 — Agent Runtime Portability: Claude Code / Codex 通用入口
+
+### 目标
+
+让 Question-to-Mastery Harness 不只绑定 Claude Code，也能被 Codex 等遵循仓库 agent 指令的运行时直接使用。
+
+### 计划改动
+
+- 将当前 `CLAUDE.md` 编排协议迁移或同步到通用入口 `AGENTS.md`。
+- 保留 `CLAUDE.md` 作为 Claude Code 兼容入口，避免破坏现有 `+ask` / hook 体验。
+- 梳理 `.claude/settings.json` 与 `.claude/hooks/intake-question.sh` 中的 Claude Code 专属能力，标记哪些可以抽成通用脚本，哪些只能作为 Claude Code 增强体验。
+- README 中把“Claude Code 启动”改为“Agent Runtime 启动”，并单独说明 Claude Code 的 hook 快捷路径。
+
+### 验收标准
+
+- Codex 在读取 `AGENTS.md` 后能按同一套编排协议启动 Planner / Builder / Evaluator。
+- Claude Code 仍可通过 `+ask` / `+start` 使用现有自动落盘与 visualizer 自动打开流程。
+- 文档中清楚区分“核心 harness 协议”和“Claude Code 专属 hook UX”。
+
+---
+
 ## v1.0 — Stable Question-to-Mastery Harness
 
 ### 目标
