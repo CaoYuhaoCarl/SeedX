@@ -84,12 +84,14 @@
 | `WORKSPACE_DIR` | 当前工作区目录 |
 | `PROJECT_NAME` | 用户显式提供则使用；否则从输入文件名推导，去掉 `question-source-` 等无标题意义前缀和 `.md` 后缀 |
 | `OUTPUT_DIR` | 默认 `{WORKSPACE_DIR}/output/{PROJECT_NAME}`；必须位于 `{WORKSPACE_DIR}/output/` 下 |
+| `VISUALIZER_URL` | 默认 `http://127.0.0.1:8765/tools/harness-visualizer.html?project={PROJECT_NAME}`；由 `tools/open-visualizer.sh {PROJECT_NAME}` 启动 |
 | `TIME_FORMAT` | 统一使用 `{yymmdd hhmmss}` |
 
 初始化硬规则：
 
 - 创建 `{OUTPUT_DIR}`、`{OUTPUT_DIR}/deliverables/`、`{OUTPUT_DIR}/_agent/review-reports/`、`{OUTPUT_DIR}/_run/`。
 - 创建并初始化 `{OUTPUT_DIR}/README.md`、`{OUTPUT_DIR}/_run/run-log.md`、`{OUTPUT_DIR}/_run/events.jsonl`、`{OUTPUT_DIR}/_run/state.json`。
+- 在进入 Phase 1 前必须启动可视化面板：从 `WORKSPACE_DIR` 执行 `./tools/open-visualizer.sh {PROJECT_NAME}`；若脚本不存在或启动失败，必须在 `_run/run-log.md` 记录 `Visualizer Launch Failed` 并向用户报告，但不得阻塞 harness 核心流程。
 - MVP 固定按 `task01 → task02 → task03` 顺序执行。
 - 严禁把 `OUTPUT_DIR` 设置为输入文件所在目录。
 
@@ -150,7 +152,7 @@ Observability files:
     └── state.json
 ```
 
-`README.md` 是路径索引，不是学习内容正文。提问者默认阅读 `deliverables/`，agent 和运行时默认使用 `_agent/` 与 `_run/`。详细分类见 `docs/specs/output-artifact-layout.md`。
+`README.md` 是 Obsidian 友好的路径索引（使用 `[[filename]]` wiki-link 格式），不是学习内容正文。详细分类见 `docs/specs/output-artifact-layout.md`。
 
 ---
 
@@ -172,34 +174,34 @@ Every critical node MUST do all applicable updates before continuing:
 
 ### 5.2 Initial `README.md`
 
-`README.md` is the project entrypoint and path index. It may be created by the Main Agent because it contains only paths/status, not learning content.
+`README.md` 是项目入口和 Obsidian 友好的路径索引（使用 wiki-link 格式 `[[filename]]`），不是学习内容正文。提问者默认阅读 `deliverables/`，agent 和运行时默认使用 `_agent/` 与 `_run/`。
 
 ```markdown
 # Question-to-Mastery Output — {PROJECT_NAME}
 
-## Read First
+## 学习路径
 
-- `deliverables/question-brief.md`
-- `deliverables/domain-map.md`
-- `deliverables/learning-path.md`
-- `deliverables/exercises.md`
-- `deliverables/checkpoints.md`
-- `deliverables/application-plan.md`
-- `deliverables/transfer-plan.md`
+- [[question-brief]] — 问题概述
+- [[domain-map]] — 领域地图
+- [[learning-path]] — 学习路径
+- [[exercises]] — 练习
+- [[checkpoints]] — 里程碑
+- [[application-plan]] — 应用计划
+- [[transfer-plan]] — 迁移计划
 
-## Agent Workspace
+## Agent 工作区
 
-- `_agent/learning-plan.md`
-- `_agent/learning-contract.md`
-- `_agent/learning-design-guide.md`
-- `_agent/project-lessons.md`
-- `_agent/review-reports/`
+- [[learning-plan]] — 学习规划
+- [[learning-contract]] — 学习契约
+- [[learning-design-guide]] — 设计指南
+- [[project-lessons]] — 项目经验
+- [[review-reports]] — 评估报告
 
-## Runtime
+## 运行时
 
-- `_run/run-log.md`
-- `_run/events.jsonl`
-- `_run/state.json`
+- [[run-log]] — 运行日志
+- [[events]] — 事件流
+- [[state]] — 状态快照
 ```
 
 ### 5.3 Initial `_run/run-log.md`
@@ -263,6 +265,7 @@ Use these event types. Add only protocol-level fields: path, task, role, Agent I
 | `task_status_changed` | `ts`, `type`, `task`, `from`, `to`, optional `iterations`, optional `judgment` |
 | `evaluation_finished` | `ts`, `type`, `role`, `task`, `instance_id`, `report`, `judgment`, `round` |
 | `agent_resumed` | `ts`, `type`, `role`, `task`, `instance_id`, `reason`, `round`, optional `instruction` |
+| `visualizer_started` | `ts`, `type`, `project`, `url`, `status`, optional `log`, optional `error` |
 | `project_finished` | `ts`, `type`, `project`, `status`, `duration` |
 
 `instruction` is the exact handoff prompt sent to the subagent, after substituting paths/task fields. It must not include source bodies, deliverable bodies, full reports, hidden reasoning, or credentials.
@@ -319,7 +322,13 @@ Actions:
 2. Validate `OUTPUT_DIR` is under `{WORKSPACE_DIR}/output/` and not the input directory.
 3. Create output directories, path index, agent workspace, and observability files.
 4. Initialize `README.md`, `_run/run-log.md`, append `project_started`, initialize `_run/state.json` with `phase = "initialized"`.
-5. Continue to Phase 1.
+5. Launch the observability UI before planning:
+   - If `{WORKSPACE_DIR}/tools/open-visualizer.sh` exists, run `./tools/open-visualizer.sh {PROJECT_NAME}` from `{WORKSPACE_DIR}`.
+   - Verify the script prints or opens `VISUALIZER_URL`.
+   - Append `_run/run-log.md`: `Visualizer Started` with the URL.
+   - Append `_run/events.jsonl` event: `visualizer_started` with `ts`, `type`, `project`, `url`, `status="ok"`.
+   - If launch or verification fails, append `_run/run-log.md`: `Visualizer Launch Failed` with the error/log path, append `visualizer_started` with `status="failed"`, report the warning to the user, and continue to Phase 1.
+6. Continue to Phase 1.
 
 ### Phase 1 — Planning
 

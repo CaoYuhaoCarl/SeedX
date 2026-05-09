@@ -148,6 +148,24 @@
       background:rgba(251,113,133,.06);display:flex;align-items:center;justify-content:center;text-align:center}
 
     /* ===== Real-time harness console ===== */
+    /* ===== User question panel ===== */
+    .question-panel{margin-bottom:16px}
+    .question-box{border:1px solid rgba(34,211,238,.38);border-radius:14px;background:rgba(2,6,23,.72);
+      padding:14px 16px;max-height:220px;overflow-y:auto}
+    .question-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .question-badge{font-size:10px;color:var(--cyan);border:1px solid rgba(34,211,238,.5);
+      border-radius:999px;padding:2px 8px;background:rgba(34,211,238,.06);text-transform:uppercase;letter-spacing:.8px}
+    .question-source{font-size:11px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .question-body{color:#e2e8f0;font-size:12px;line-height:1.65;white-space:pre-wrap;
+      display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+    .question-body.expanded{-webkit-line-clamp:unset}
+    .question-toggle{font-size:10px;color:var(--cyan);cursor:pointer;margin-top:8px;
+      display:inline-flex;align-items:center;gap:4px}
+    .question-toggle:hover{color:#67e8f9}
+    .question-loading{font-size:11px;color:var(--muted);padding:10px}
+    .question-error{font-size:11px;color:var(--rose);padding:8px 10px;
+      border:1px solid rgba(251,113,133,.3);border-radius:8px;background:rgba(251,113,133,.06)}
+
     .live-focus{border-color:rgba(251,191,36,.42);
       background:radial-gradient(circle at 18% 0%,rgba(251,191,36,.10),transparent 34%),
                  linear-gradient(135deg,rgba(15,23,42,.96),rgba(2,6,23,.78))}
@@ -367,6 +385,12 @@
   <button class="toggle" id="sidebarToggle" type="button">⚙ Controls</button>
 </div>
 
+<div class="question-panel">
+  <div class="question-box" id="questionBox">
+    <div class="question-loading">Loading question...</div>
+  </div>
+</div>
+
 <div class="layout" id="layout">
   <main>
 
@@ -460,6 +484,7 @@ const taskDefaults = {
 
 const escapeHtml = s => String(s??'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fileName = p => String(p||'').split('/').filter(Boolean).pop() || String(p||'—');
+const truncate = (s, n) => String(s||'').length > n ? String(s||'').slice(0,n) + '…' : s;
 const parseJsonl = text => text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map((line,i)=>{
   try{ return {...JSON.parse(line), _idx:i}; }catch(e){ return {ts:'?',type:'parse_error',error:e.message,line:i+1,raw:line,_idx:i}; }
 });
@@ -609,6 +634,55 @@ async function refreshOnce(){
   setRefreshStatus(`${currentProject.name} · ${events.length} events · ${new Date().toLocaleTimeString()}`);
 }
 
+// ===== User Question Panel =====
+let questionExpanded = false;
+
+function renderQuestion(sourcePath, outputDir){
+  const box = $('questionBox');
+  if(!sourcePath){
+    box.innerHTML = '<div class="question-error">No source path in state</div>'; return;
+  }
+  // sourcePath may be absolute or relative; try to resolve it
+  let url;
+  if(sourcePath.startsWith('/')){
+    url = sourcePath;
+  } else if(outputDir){
+    // e.g. outputDir = /path/to/output/PROJECT → back out to workspace root
+    const base = outputDir.replace(/\/output\/[^/]+$/,'');
+    url = base + '/' + sourcePath.replace(/^\.\//,'');
+  } else {
+    box.innerHTML = '<div class="question-error">Cannot resolve source path</div>'; return;
+  }
+
+  box.innerHTML = '<div class="question-loading">Loading question…</div>';
+  fetch(url,{cache:'no-store'}).then(r=>{
+    if(!r.ok){ box.innerHTML = `<div class="question-error">Failed to load: ${r.status} ${escapeHtml(sourcePath)}</div>`; return; }
+    return r.text();
+  }).then(txt=>{
+    if(!txt) return;
+    // Display first 500 chars; show toggle for longer
+    const short = txt.length > 600;
+    const display = short && !questionExpanded ? txt.slice(0,600) : txt;
+    const meta = sourcePath.split('/').pop();
+    box.innerHTML = `
+      <div class="question-meta">
+        <span class="question-badge">Q</span>
+        <span class="question-source" title="${escapeHtml(sourcePath)}">${escapeHtml(meta)}</span>
+      </div>
+      <div class="question-body${questionExpanded&&short?'':' expanded'}" id="questionBody">${escapeHtml(display)}</div>
+      ${short ? `<span class="question-toggle" id="questionToggle">${questionExpanded?'▲ 收起':'▶ 展开全部 ('+txt.length+' chars)'}</span>` : ''}
+    `;
+    if(short){
+      $('questionToggle').addEventListener('click', ()=>{
+        questionExpanded = !questionExpanded;
+        renderQuestion(sourcePath, outputDir);
+      });
+    }
+  }).catch(e=>{
+    box.innerHTML = `<div class="question-error">Load error: ${escapeHtml(e.message)}</div>`;
+  });
+}
+
 // ===== Init =====
 window.addEventListener('DOMContentLoaded', ()=>{
   const evParam = params.get('events');
@@ -697,6 +771,7 @@ function render(){
   renderAgents(s);
   renderStatus(s);
   renderDiscipline(s);
+  renderQuestion(s.source, s.output);
 }
 
 function activeRolesFromEvents(s){

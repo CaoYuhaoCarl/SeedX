@@ -92,6 +92,14 @@ Recommended optional common fields:
 {"ts":"260507 182700","type":"agent_resumed","role":"mastery-builder","task":"task01","instance_id":"abc123","reason":"evaluation_failed","round":1,"instruction":"当前任务：task01 (Framing)\n评估报告：output/ai-agent-memory/_agent/review-reports/task01-evaluation.md\n相关产物：output/ai-agent-memory/deliverables/question-brief.md, output/ai-agent-memory/deliverables/domain-map.md\nproject-lessons: output/ai-agent-memory/_agent/project-lessons.md\n\n请读取评估报告，修正所有必须修复的问题，并更新 project-lessons.md。不得引入输入文件未明确给出的个人/行业背景。完成后只返回简短确认和已更新路径。"}
 ```
 
+### `visualizer_started`
+
+```json
+{"ts":"260507 181456","type":"visualizer_started","project":"ai-agent-memory","url":"http://127.0.0.1:8765/tools/harness-visualizer.html?project=ai-agent-memory","status":"ok","log":"/tmp/harness-visualizer-8765.log"}
+```
+
+If launch fails, use `"status":"failed"` and include `error` and/or `log`. The core harness should continue after recording the failure.
+
 ### `project_finished`
 
 ```json

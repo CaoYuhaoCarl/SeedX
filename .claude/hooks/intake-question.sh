@@ -2,8 +2,8 @@
 # Question-to-Mastery intake hook
 #
 # Routes UserPromptSubmit prompts into the Question-to-Mastery flow:
-#   +ask                 → read clipboard via pbpaste, save, launch (one-step strict)
-#   +ask <body>          → save body, BLOCK original prompt, await +start
+#   +ask                 → launch pending inline question, or read clipboard/save/launch
+#   +ask <body>          → save body, BLOCK original prompt, await bare +ask
 #   +ask:<body>          → same as +ask <body>
 #   +ask：<body>         → same as +ask <body> (Chinese full-width colon)
 #   +ask-strict <body>   → same as inline +ask body
@@ -29,6 +29,7 @@ if [[ -z "$CWD" ]]; then
 fi
 
 QUESTIONS_DIR="$CWD/input/questions"
+PENDING_ASK_FILE="$CWD/.claude/hooks/.pending-ask"
 
 derive_project_name() {
   local rel_path="$1"
@@ -85,6 +86,25 @@ save_body() {
   printf '%s' "input/questions/question-$ts.md"
 }
 
+mark_pending_ask() {
+  local rel_path="$1"
+  mkdir -p "${PENDING_ASK_FILE%/*}"
+  printf '%s' "$rel_path" > "$PENDING_ASK_FILE"
+}
+
+consume_pending_ask() {
+  local rel_path
+  if [[ ! -f "$PENDING_ASK_FILE" ]]; then
+    return 0
+  fi
+
+  rel_path=$(cat "$PENDING_ASK_FILE")
+  rm -f "$PENDING_ASK_FILE"
+  if [[ -n "$rel_path" && -f "$CWD/$rel_path" ]]; then
+    printf '%s' "$rel_path"
+  fi
+}
+
 # Strip a literal prefix from PROMPT, plus following whitespace and/or colons.
 # Accepts '+ask <body>', '+ask: <body>', '+ask:<body>', and '+ask：<body>'.
 # perl \Q...\E escapes regex specials in prefix.
@@ -113,14 +133,20 @@ fi
 
 # ---------------------------------------------------------------------------
 # +ask [body]
-#   no body    → clipboard mode: pbpaste + save + launch in the same turn.
+#   no body    → launch pending inline question, or clipboard save + launch.
 #   with body  → save + block. Inline body is visible to the main agent, so
-#                same-turn launch is deliberately disabled to avoid Q&A drift.
+#                the next bare +ask launches from the saved file.
 # ---------------------------------------------------------------------------
 if [[ "$PROMPT" =~ ^[+]ask([[:space:]:：]|$) ]]; then
   if [[ "$PROMPT" =~ ^[+]ask[:：]?[[:space:]]*$ ]]; then
+    pending_rel=$(consume_pending_ask)
+    if [[ -n "$pending_rel" ]]; then
+      emit_launch "$pending_rel"
+      exit 0
+    fi
+
     if ! command -v pbpaste >/dev/null 2>&1; then
-      emit_block "❌ 剪贴板模式需要 \`pbpaste\`（macOS）。请用 \`+ask <问题正文>\` 先落盘，再发送 \`+start\`。"
+      emit_block "❌ 剪贴板模式需要 \`pbpaste\`（macOS）。请用 \`+ask <问题正文>\` 先保存，再发送 \`+ask\` 启动。"
       exit 0
     fi
     body=$(pbpaste)
@@ -135,13 +161,16 @@ if [[ "$PROMPT" =~ ^[+]ask([[:space:]:：]|$) ]]; then
     body=$(strip_prefix "+ask")
   fi
   rel=$(save_body "$body")
-  emit_block "✅ 问题已落盘到 \`$rel\`。
+  mark_pending_ask "$rel"
+  emit_block "😊 提示：这是正常拦截。下次想一键启动，先复制问题正文，再只发送 \`+ask\`。
 
-为避免主 Agent 把 inline 正文当作普通问答直接回答，本消息已被 block。
+✅ 问题已保存：\`$rel\`
 
-下一步：发送 \`+start $rel\` 启动编排器。
+----
+开始，请发送：\`+ask\`
+----
 
-想要一键启动：先复制问题正文到剪贴板，然后只发送 \`+ask\`。"
+"
   exit 0
 fi
 
