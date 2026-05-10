@@ -33,6 +33,19 @@ PENDING_ASK_FILE="$CWD/.claude/hooks/.pending-ask"
 
 derive_project_name() {
   local rel_path="$1"
+  local derived source_path
+  if [[ -f "$CWD/tools/derive-project-name.py" ]] && command -v python3 >/dev/null 2>&1; then
+    source_path="$rel_path"
+    if [[ "$source_path" != /* ]]; then
+      source_path="$CWD/$source_path"
+    fi
+    derived=$(python3 "$CWD/tools/derive-project-name.py" "$source_path" 2>/dev/null || true)
+    if [[ -n "$derived" ]]; then
+      printf '%s' "$derived"
+      return 0
+    fi
+  fi
+
   local base name
   base="${rel_path##*/}"
   name="${base%.md}"
@@ -41,32 +54,12 @@ derive_project_name() {
   printf '%s' "$name"
 }
 
-launch_visualizer() {
-  local rel_path="$1"
-  local project port
-  project=$(derive_project_name "$rel_path")
-  port="${Q2M_VISUALIZER_PORT:-8765}"
-
-  if [[ "${Q2M_VISUALIZER_AUTO_OPEN:-1}" == "0" ]]; then
-    return 0
-  fi
-  if [[ -z "$project" || ! -x "$CWD/tools/open-visualizer.sh" ]]; then
-    return 0
-  fi
-
-  (
-    "$CWD/tools/open-visualizer.sh" "$project" "$port" \
-      > /tmp/q2m-harness-visualizer.log 2>&1 < /dev/null &
-  ) || true
-}
-
 emit_launch() {
   local rel_path="$1"
-  launch_visualizer "$rel_path"
   jq -n --arg p "$rel_path" --arg cwd "$CWD" '{
     hookSpecificOutput: {
       hookEventName: "UserPromptSubmit",
-      additionalContext: ("HARNESS_LAUNCH_TRIGGER\n学习问题路径：\($p)\n\n请严格按当前工作区 CLAUDE.md 执行：\n- 当前用户消息是 harness 触发器，不是普通问答请求；不要直接回答、总结或解决原始学习问题\n- 当前工作区：\($cwd)\n- 立即进入 Question-to-Mastery 编排流程；主 Agent 只初始化、调度、记录状态，不生产学习产物\n- 学习问题路径作为输入；handoff prompt 必须使用 §7 模板，严禁在 subagent prompt 中复述、改写或引用问题正文\n- 不得把输出目录设置为输入文件所在文件夹\n- 默认保持通用学习者视角；只有输入文件显式提供的背景、目标、场景和约束才能进入 learning-contract 与产物\n- 初始化后创建 README.md、_run/run-log.md、_run/events.jsonl、_run/state.json，然后启动 question-planner subagent")
+      additionalContext: ("HARNESS_LAUNCH_TRIGGER\n学习问题路径：\($p)\n\n请严格按当前工作区 CLAUDE.md 执行：\n- 当前用户消息是 harness 触发器，不是普通问答请求；不要直接回答、总结或解决原始学习问题\n- 当前工作区：\($cwd)\n- 立即进入 Question-to-Mastery 编排流程；主 Agent 只初始化、调度、记录状态，不生产学习产物\n- 学习问题路径作为输入；handoff prompt 必须使用 §7 模板，严禁在 subagent prompt 中复述、改写或引用问题正文\n- 不得把输出目录设置为输入文件所在文件夹\n- 默认保持通用学习者视角；只有输入文件显式提供的背景、目标、场景和约束才能进入 learning-contract 与产物\n- 初始化后创建 README.md、_run/run-log.md、_run/events.jsonl、_run/state.json，由主 Agent 启动 Harness Visualizer 并记录 visualizer_started，然后启动 question-planner subagent")
     }
   }'
 }
@@ -83,7 +76,19 @@ save_body() {
   ts=$(date +%y%m%d-%H%M%S)
   local file="$QUESTIONS_DIR/question-$ts.md"
   printf '%s\n' "$body" > "$file"
-  printf '%s' "input/questions/question-$ts.md"
+
+  local rel project target
+  rel="input/questions/question-$ts.md"
+  project=$(derive_project_name "$rel")
+  if [[ -n "$project" ]]; then
+    target="$QUESTIONS_DIR/question-source-$project.md"
+    if [[ "$target" != "$file" && ! -e "$target" ]]; then
+      mv "$file" "$target"
+      rel="input/questions/question-source-$project.md"
+    fi
+  fi
+
+  printf '%s' "$rel"
 }
 
 mark_pending_ask() {

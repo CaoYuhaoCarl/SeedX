@@ -43,11 +43,11 @@ Copy the learning question body to your clipboard, then type into Claude Code:
 ```
 
 A `UserPromptSubmit` hook will:
-- Read the clipboard body via `pbpaste` and save it to `input/questions/question-<timestamp>.md`
+- Read the clipboard body via `pbpaste` and save it to `input/questions/question-source-<english-topic>-<timestamp>.md`
 - Inject the path and launch instruction so the main agent never sees the original body and starts the orchestrator
-- Open Harness Visualizer in the background and wait for this run's `_run/events.jsonl` + `_run/state.json`
+- Let the orchestrator open Harness Visualizer after it initializes this run's `_run/events.jsonl` + `_run/state.json`
 
-Project name and output directory are auto-derived from the filename — nothing else to fill in.
+Project name and output directory use the same English topic + timestamp shape, for example `output/meme-ai-agent-260509-215509/`.
 
 If you send `+ask <body>` / `+ask:<body>` / `+ask：<body>` inline, the hook saves the body and blocks the original message; then follow the shown `+start <path>` prompt. This prevents the main agent from seeing inline text and treating it as a normal Q&A request.
 
@@ -69,8 +69,8 @@ If you want to override the project name or output directory, the legacy prompt 
 
 ```text
 Learning question path: {WORKSPACE_DIR}/input/questions/{question-file}.md
-Project name: {project-name}
-Output directory: {WORKSPACE_DIR}/output/{project-name}
+Project name: {english-topic-yymmdd-HHMMSS}
+Output directory: {WORKSPACE_DIR}/output/{english-topic-yymmdd-HHMMSS}
 
 Please strictly follow the CLAUDE.md in the current workspace:
 - Current workspace: {WORKSPACE_DIR}
@@ -86,10 +86,10 @@ Example input files are available in `input/questions/`.
 
 ## Run Output
 
-A complete run generates the following under `output/{project-name}/`:
+A complete run generates the following under `output/{english-topic-yymmdd-HHMMSS}/`:
 
 ```text
-output/{project-name}/
+output/{english-topic-yymmdd-HHMMSS}/
 ├── README.md                  # Path index; question askers start here
 ├── deliverables/              # Default reading path for the learner
 │   ├── question-brief.md
@@ -139,7 +139,7 @@ Tasks run in the fixed order `task01 → task02 → task03`. Each task is built 
 ├── README.zh-CN.md                  # Simplified Chinese README
 ├── README.ja.md                     # Japanese README
 ├── input/questions/                 # Learning question input files
-├── output/{project-name}/           # Run outputs, isolated by project
+├── output/{english-topic-yymmdd-HHMMSS}/ # Run outputs, isolated by project
 ├── docs/
 │   ├── assets/                      # README and documentation assets
 │   ├── plans/                       # Implementation plans
@@ -163,11 +163,11 @@ Tasks run in the fixed order `task01 → task02 → task03`. Each task is built 
 
 ## Observability Visualization
 
-v0.2 adds a lightweight observability layer: it does not read learning artifact bodies, only run state. When you start with `+ask` / `+start`, the intake hook opens the panel in the background; the panel waits for and polls this run's `_run/events.jsonl` + `_run/state.json`.
+v0.2 adds a lightweight observability layer: it does not read learning artifact bodies, only run state. When you start with `+ask` / `+start`, the orchestrator opens the panel after initializing this run's `_run/events.jsonl` + `_run/state.json`; the panel then polls those files.
 
 ```bash
 # Open the panel and load _run/events.jsonl + _run/state.json for a project, refreshing every 2 seconds
-./tools/open-visualizer.sh {project-name}
+./tools/open-visualizer.sh {english-topic-yymmdd-HHMMSS}
 
 # Without a project name, automatically choose the newest project under output/
 ./tools/open-visualizer.sh

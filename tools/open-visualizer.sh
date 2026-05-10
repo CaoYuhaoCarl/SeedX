@@ -6,8 +6,8 @@ set -euo pipefail
 #   tools/open-visualizer.sh [project-name] [port]
 # Examples:
 #   tools/open-visualizer.sh
-#   tools/open-visualizer.sh ai-agent-memory
-#   tools/open-visualizer.sh ai-agent-memory 8765
+#   tools/open-visualizer.sh meme-ai-agent-260509-215509
+#   tools/open-visualizer.sh meme-ai-agent-260509-215509 8765
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT="${1:-}"
@@ -27,6 +27,7 @@ URL="http://${HOST}:${PORT}/tools/harness-visualizer.html"
 if [[ -n "$PROJECT" ]]; then
   URL="${URL}?project=${PROJECT}"
 fi
+OPEN_STAMP="/tmp/harness-visualizer-${PORT}-$(printf '%s' "${PROJECT:-default}" | tr -c '[:alnum:]_.-' '_').open"
 
 # Reuse an existing server only if it can serve the visualizer file from this workspace.
 # A port may already be occupied by a stale http.server whose root is wrong; in that case
@@ -66,12 +67,25 @@ then
   exit 1
 fi
 
-if command -v open >/dev/null 2>&1; then
-  open "$URL"
-elif command -v xdg-open >/dev/null 2>&1; then
-  xdg-open "$URL"
-else
-  echo "$URL"
+SHOULD_OPEN=1
+OPEN_TTL_SECONDS="${Q2M_VISUALIZER_OPEN_TTL_SECONDS:-60}"
+if [[ -f "$OPEN_STAMP" ]]; then
+  NOW_SECONDS="$(date +%s)"
+  STAMP_SECONDS="$(stat -f %m "$OPEN_STAMP" 2>/dev/null || stat -c %Y "$OPEN_STAMP" 2>/dev/null || echo 0)"
+  if (( NOW_SECONDS - STAMP_SECONDS < OPEN_TTL_SECONDS )); then
+    SHOULD_OPEN=0
+  fi
+fi
+
+if [[ "$SHOULD_OPEN" == "1" ]]; then
+  : > "$OPEN_STAMP"
+  if command -v open >/dev/null 2>&1; then
+    open "$URL"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$URL"
+  else
+    echo "$URL"
+  fi
 fi
 
 echo "Visualizer: $URL"

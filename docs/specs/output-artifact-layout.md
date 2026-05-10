@@ -17,6 +17,8 @@ The output directory must not mix final learning artifacts with runtime traces a
 
 ## Layout
 
+`{PROJECT_NAME}` must be `english-topic-slug-yymmdd-HHMMSS`, for example `meme-ai-agent-260509-215509`.
+
 ```text
 output/{PROJECT_NAME}/
 ├── README.md
@@ -103,4 +105,3 @@ These files exist to make the run observable and resumable:
 5. Main agent may create or update `README.md` only as an index of paths and statuses. It must not write learning content.
 6. Events and state must store relative paths using this layout.
 7. Legacy flat output directories may still be read by tools during migration, but new runs should write the grouped layout.
-

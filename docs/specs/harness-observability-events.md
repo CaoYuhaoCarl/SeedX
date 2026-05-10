@@ -43,7 +43,7 @@ Recommended optional common fields:
 
 ```json
 {
-  "project": "ai-agent-memory",
+  "project": "ai-agent-memory-260507-181455",
   "task": "task01",
   "role": "mastery-builder",
   "instance_id": "abc123"
@@ -57,13 +57,13 @@ Recommended optional common fields:
 ### `project_started`
 
 ```json
-{"ts":"260507 181455","type":"project_started","project":"ai-agent-memory","source":"input/questions/question-source-ai-agent-memory.md","output":"output/ai-agent-memory"}
+{"ts":"260507 181455","type":"project_started","project":"ai-agent-memory-260507-181455","source":"input/questions/question-source-ai-agent-memory-260507-181455.md","output":"output/ai-agent-memory-260507-181455"}
 ```
 
 ### `agent_started`
 
 ```json
-{"ts":"260507 181500","type":"agent_started","role":"question-planner","task":"planning","instruction":"学习问题路径：input/questions/question-source-ai-agent-memory.md\n输出目录：output/ai-agent-memory\n\n请读取学习问题和 designing-mastery-paths skill，按 explicit-input-only 个性化原则产出 _agent/learning-plan.md、_agent/learning-contract.md、_agent/learning-design-guide.md、_agent/project-lessons.md，并创建 _agent/review-reports/。完成后只返回文件路径列表。"}
+{"ts":"260507 181500","type":"agent_started","role":"question-planner","task":"planning","instruction":"学习问题路径：input/questions/question-source-ai-agent-memory-260507-181455.md\n输出目录：output/ai-agent-memory-260507-181455\n\n请读取学习问题和 designing-mastery-paths skill，按 explicit-input-only 个性化原则产出 _agent/learning-plan.md、_agent/learning-contract.md、_agent/learning-design-guide.md、_agent/project-lessons.md，并创建 _agent/review-reports/。完成后只返回文件路径列表。"}
 ```
 
 `instruction` is the exact handoff prompt sent to the subagent after substituting paths/task fields. It may contain protocol instructions and paths, but never source bodies, deliverable bodies, full reports, hidden reasoning, or credentials.
@@ -89,13 +89,13 @@ Recommended optional common fields:
 ### `agent_resumed`
 
 ```json
-{"ts":"260507 182700","type":"agent_resumed","role":"mastery-builder","task":"task01","instance_id":"abc123","reason":"evaluation_failed","round":1,"instruction":"当前任务：task01 (Framing)\n评估报告：output/ai-agent-memory/_agent/review-reports/task01-evaluation.md\n相关产物：output/ai-agent-memory/deliverables/question-brief.md, output/ai-agent-memory/deliverables/domain-map.md\nproject-lessons: output/ai-agent-memory/_agent/project-lessons.md\n\n请读取评估报告，修正所有必须修复的问题，并更新 project-lessons.md。不得引入输入文件未明确给出的个人/行业背景。完成后只返回简短确认和已更新路径。"}
+{"ts":"260507 182700","type":"agent_resumed","role":"mastery-builder","task":"task01","instance_id":"abc123","reason":"evaluation_failed","round":1,"instruction":"当前任务：task01 (Framing)\n评估报告：output/ai-agent-memory-260507-181455/_agent/review-reports/task01-evaluation.md\n相关产物：output/ai-agent-memory-260507-181455/deliverables/question-brief.md, output/ai-agent-memory-260507-181455/deliverables/domain-map.md\nproject-lessons: output/ai-agent-memory-260507-181455/_agent/project-lessons.md\n\n请读取评估报告，修正所有必须修复的问题，并更新 project-lessons.md。不得引入输入文件未明确给出的个人/行业背景。完成后只返回简短确认和已更新路径。"}
 ```
 
 ### `visualizer_started`
 
 ```json
-{"ts":"260507 181456","type":"visualizer_started","project":"ai-agent-memory","url":"http://127.0.0.1:8765/tools/harness-visualizer.html?project=ai-agent-memory","status":"ok","log":"/tmp/harness-visualizer-8765.log"}
+{"ts":"260507 181456","type":"visualizer_started","project":"ai-agent-memory-260507-181455","url":"http://127.0.0.1:8765/tools/harness-visualizer.html?project=ai-agent-memory-260507-181455","status":"ok","log":"/tmp/harness-visualizer-8765.log"}
 ```
 
 If launch fails, use `"status":"failed"` and include `error` and/or `log`. The core harness should continue after recording the failure.
@@ -103,7 +103,7 @@ If launch fails, use `"status":"failed"` and include `error` and/or `log`. The c
 ### `project_finished`
 
 ```json
-{"ts":"260507 184000","type":"project_finished","project":"ai-agent-memory","status":"PASS","duration":"26m"}
+{"ts":"260507 184000","type":"project_finished","project":"ai-agent-memory-260507-181455","status":"PASS","duration":"26m"}
 ```
 
 ---
@@ -116,9 +116,9 @@ Example:
 
 ```json
 {
-  "project": "ai-agent-memory",
-  "source": "input/questions/question-source-ai-agent-memory.md",
-  "output": "output/ai-agent-memory",
+  "project": "ai-agent-memory-260507-181455",
+  "source": "input/questions/question-source-ai-agent-memory-260507-181455.md",
+  "output": "output/ai-agent-memory-260507-181455",
   "phase": "task_loop",
   "current_task": "task02",
   "updated_at": "260507 182700",

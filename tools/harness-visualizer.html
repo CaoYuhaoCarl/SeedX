@@ -637,20 +637,32 @@ async function refreshOnce(){
 // ===== User Question Panel =====
 let questionExpanded = false;
 
+function sourceUrlForBrowser(sourcePath, outputDir){
+  const src = (sourcePath || '').replace(/\\/g,'/').replace(/^\.\//,'');
+  const out = (outputDir || '').replace(/\\/g,'/');
+  if(!src) return null;
+
+  // The visualizer is served from /tools/, so workspace-relative paths need ../.
+  if(!src.startsWith('/')) return '../' + src.replace(/^\/+/,'');
+
+  const inputIdx = src.indexOf('/input/questions/');
+  if(inputIdx >= 0) return '..' + src.slice(inputIdx);
+
+  const workspaceRoot = out.replace(/\/output\/[^/]+\/?$/,'');
+  if(workspaceRoot && src.startsWith(workspaceRoot + '/')){
+    return '../' + src.slice(workspaceRoot.length + 1);
+  }
+
+  return null;
+}
+
 function renderQuestion(sourcePath, outputDir){
   const box = $('questionBox');
   if(!sourcePath){
     box.innerHTML = '<div class="question-error">No source path in state</div>'; return;
   }
-  // sourcePath may be absolute or relative; try to resolve it
-  let url;
-  if(sourcePath.startsWith('/')){
-    url = sourcePath;
-  } else if(outputDir){
-    // e.g. outputDir = /path/to/output/PROJECT → back out to workspace root
-    const base = outputDir.replace(/\/output\/[^/]+$/,'');
-    url = base + '/' + sourcePath.replace(/^\.\//,'');
-  } else {
+  const url = sourceUrlForBrowser(sourcePath, outputDir);
+  if(!url){
     box.innerHTML = '<div class="question-error">Cannot resolve source path</div>'; return;
   }
 

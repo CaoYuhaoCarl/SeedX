@@ -82,13 +82,14 @@
 |---|---|
 | `LEARNING_SOURCE_FILE` | 用户提供或 `+ask` hook 落盘的学习问题文件路径；主 Agent 可感知正文，但严禁在 handoff、log、event、state 中复述（详见 §1.2） |
 | `WORKSPACE_DIR` | 当前工作区目录 |
-| `PROJECT_NAME` | 用户显式提供则使用；否则从输入文件名推导，去掉 `question-source-` 等无标题意义前缀和 `.md` 后缀 |
+| `PROJECT_NAME` | 必须是 `{english-topic-slug}-{yymmdd-HHMMSS}`，如 `meme-ai-agent-260509-215509`。优先运行 `tools/derive-project-name.py {LEARNING_SOURCE_FILE}`；用户显式提供时也必须符合该形状。 |
 | `OUTPUT_DIR` | 默认 `{WORKSPACE_DIR}/output/{PROJECT_NAME}`；必须位于 `{WORKSPACE_DIR}/output/` 下 |
 | `VISUALIZER_URL` | 默认 `http://127.0.0.1:8765/tools/harness-visualizer.html?project={PROJECT_NAME}`；由 `tools/open-visualizer.sh {PROJECT_NAME}` 启动 |
 | `TIME_FORMAT` | 统一使用 `{yymmdd hhmmss}` |
 
 初始化硬规则：
 
+- 若命名 helper 不可用，主 Agent 必须从学习问题文件名或正文推导 2-5 个英文小写 topic words，转成 kebab-case，并追加文件名中的时间戳；文件名无时间戳时追加当前时间 `{yymmdd-HHMMSS}`。不得只使用纯时间戳、`question-*` 或无意义占位词作为 `PROJECT_NAME`。
 - 创建 `{OUTPUT_DIR}`、`{OUTPUT_DIR}/deliverables/`、`{OUTPUT_DIR}/_agent/review-reports/`、`{OUTPUT_DIR}/_run/`。
 - 创建并初始化 `{OUTPUT_DIR}/README.md`、`{OUTPUT_DIR}/_run/run-log.md`、`{OUTPUT_DIR}/_run/events.jsonl`、`{OUTPUT_DIR}/_run/state.json`。
 - 在进入 Phase 1 前必须启动可视化面板：从 `WORKSPACE_DIR` 执行 `./tools/open-visualizer.sh {PROJECT_NAME}`；若脚本不存在或启动失败，必须在 `_run/run-log.md` 记录 `Visualizer Launch Failed` 并向用户报告，但不得阻塞 harness 核心流程。
@@ -318,7 +319,7 @@ If ID cannot be confidently identified, STOP and report the issue. Do not guess 
 
 Actions:
 
-1. Resolve runtime variables.
+1. Resolve runtime variables, deriving `PROJECT_NAME` with `tools/derive-project-name.py` when available.
 2. Validate `OUTPUT_DIR` is under `{WORKSPACE_DIR}/output/` and not the input directory.
 3. Create output directories, path index, agent workspace, and observability files.
 4. Initialize `README.md`, `_run/run-log.md`, append `project_started`, initialize `_run/state.json` with `phase = "initialized"`.

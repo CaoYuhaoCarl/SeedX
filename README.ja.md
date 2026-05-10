@@ -43,11 +43,11 @@ FAIL の場合、同じ Builder を resume して修正し、
 ```
 
 `UserPromptSubmit` hook が自動で：
-- `pbpaste` でクリップボード本文を読み取り、`input/questions/question-<タイムスタンプ>.md` に保存
+- `pbpaste` でクリップボード本文を読み取り、`input/questions/question-source-<english-topic>-<timestamp>.md` に保存
 - パスと起動指示を注入し、メイン Agent が元の本文を見ない状態でオーケストレーターを開始
-- Harness Visualizer をバックグラウンドで開き、この run の `_run/events.jsonl` + `_run/state.json` を待機
+- オーケストレーターがこの run の `_run/events.jsonl` + `_run/state.json` を初期化した後に Harness Visualizer を開く
 
-プロジェクト名と出力ディレクトリはファイル名から自動推測されるため、ほかに記入は不要です。
+プロジェクト名と出力ディレクトリは同じ English topic + timestamp 形式を使います。例: `output/meme-ai-agent-260509-215509/`。
 
 `+ask <本文>` / `+ask:<本文>` / `+ask：<本文>` を直接送った場合、hook は本文を保存して元メッセージを block します。その後、表示された `+start <path>` を送って起動してください。これにより、メイン Agent が inline 本文を普通の Q&A として回答してしまうのを防ぎます。
 
@@ -69,8 +69,8 @@ FAIL の場合、同じ Builder を resume して修正し、
 
 ```text
 学習質問パス: {WORKSPACE_DIR}/input/questions/{question-file}.md
-プロジェクト名: {project-name}
-出力ディレクトリ: {WORKSPACE_DIR}/output/{project-name}
+プロジェクト名: {english-topic-yymmdd-HHMMSS}
+出力ディレクトリ: {WORKSPACE_DIR}/output/{english-topic-yymmdd-HHMMSS}
 
 現在のワークスペースの CLAUDE.md に厳密に従ってください:
 - 現在のワークスペース: {WORKSPACE_DIR}
@@ -86,10 +86,10 @@ FAIL の場合、同じ Builder を resume して修正し、
 
 ## 実行出力
 
-完全な 1 回の実行では、`output/{project-name}/` に次のファイルが生成されます。
+完全な 1 回の実行では、`output/{english-topic-yymmdd-HHMMSS}/` に次のファイルが生成されます。
 
 ```text
-output/{project-name}/
+output/{english-topic-yymmdd-HHMMSS}/
 ├── README.md                  # パス索引。質問者はここから読む
 ├── deliverables/              # 学習者の標準閲覧先
 │   ├── question-brief.md
@@ -139,7 +139,7 @@ output/{project-name}/
 ├── README.zh-CN.md                  # 簡体字中国語 README
 ├── README.ja.md                     # 日本語 README
 ├── input/questions/                 # 学習質問の入力ファイル
-├── output/{project-name}/           # 実行出力、プロジェクトごとに分離
+├── output/{english-topic-yymmdd-HHMMSS}/ # 実行出力、プロジェクトごとに分離
 ├── docs/
 │   ├── assets/                      # README とドキュメント用アセット
 │   ├── plans/                       # 実装計画
@@ -163,11 +163,11 @@ output/{project-name}/
 
 ## Observability 可視化
 
-v0.2 では軽量な観測レイヤーが追加されました。学習成果物の本文は読まず、実行状態だけを表示します。`+ask` / `+start` で起動すると、intake hook がパネルをバックグラウンドで開き、この run の `_run/events.jsonl` + `_run/state.json` を待機・ポーリングします。
+v0.2 では軽量な観測レイヤーが追加されました。学習成果物の本文は読まず、実行状態だけを表示します。`+ask` / `+start` で起動すると、オーケストレーターがこの run の `_run/events.jsonl` + `_run/state.json` を初期化した後にパネルを開き、パネルがそれらのファイルをポーリングします。
 
 ```bash
 # 指定プロジェクトの _run/events.jsonl + _run/state.json を読み込み、2 秒ごとに更新するパネルを開く
-./tools/open-visualizer.sh {project-name}
+./tools/open-visualizer.sh {english-topic-yymmdd-HHMMSS}
 
 # プロジェクト名を省略すると、output/ 以下の最新プロジェクトを自動選択
 ./tools/open-visualizer.sh
