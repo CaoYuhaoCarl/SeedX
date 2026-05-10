@@ -8,6 +8,7 @@
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
 <img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
 <a href="https://x.com/CaoYuhaoCarl"><img src="https://img.shields.io/badge/follow-%40CaoYuhaoCarl-000000?logo=x&logoColor=white" alt="Follow on X"></a>
+<img src="https://img.shields.io/badge/WeChat-caoyuhaocarl-07C160?logo=wechat&logoColor=white" alt="WeChat caoyuhaocarl">
 
 🇺🇸 **English** · <a href="README.zh-CN.md">🇨🇳 简体中文</a> · <a href="README.ja.md">🇯🇵 日本語</a>
 
