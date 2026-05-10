@@ -58,6 +58,7 @@ When the question contains PII, trade secrets, or you want to maximize "main age
 | Trigger | Behavior | UX |
 |---|---|---|
 | `+ask` (copy the body to clipboard first; no inline body) | Read via `pbpaste`, save, and launch | 1 step |
+| `qtm <body>` / `用 qtm 调研问题：<body>` / `用 QTM 研究问题:<body>` | Save and launch directly; the body remains visible in the original prompt | 1 step |
 | `+ask <body>` / `+ask:<body>` / `+ask：<body>` / `+ask-strict <body>` | Save and block the original message; orchestrator only starts after you send `+start` | 2 steps |
 | `+start [path]` | Launch with explicit path, or the most recent question file | — |
 

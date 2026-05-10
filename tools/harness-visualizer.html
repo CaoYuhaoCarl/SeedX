@@ -637,13 +637,38 @@ async function refreshOnce(){
 // ===== User Question Panel =====
 let questionExpanded = false;
 
+function sourcePathSpecificity(sourcePath){
+  const src = (sourcePath || '').replace(/\\/g,'/');
+  if(!src) return 0;
+  if(src.startsWith('/')) return 4;
+  if(src.startsWith('input/questions/') || src.includes('/input/questions/')) return 3;
+  if(src.includes('/')) return 2;
+  return 1;
+}
+
+function preferSourcePath(currentSource, nextSource){
+  if(!nextSource) return currentSource;
+  if(!currentSource) return nextSource;
+  return sourcePathSpecificity(nextSource) >= sourcePathSpecificity(currentSource)
+    ? nextSource
+    : currentSource;
+}
+
+function isBareQuestionSource(src){
+  return !src.includes('/') && /^(question-source-|question-|source-).+\.md$/i.test(src);
+}
+
 function sourceUrlForBrowser(sourcePath, outputDir){
   const src = (sourcePath || '').replace(/\\/g,'/').replace(/^\.\//,'');
   const out = (outputDir || '').replace(/\\/g,'/');
   if(!src) return null;
 
   // The visualizer is served from /tools/, so workspace-relative paths need ../.
-  if(!src.startsWith('/')) return '../' + src.replace(/^\/+/,'');
+  if(!src.startsWith('/')){
+    const rel = src.replace(/^\/+/,'');
+    if(isBareQuestionSource(rel)) return '../input/questions/' + rel;
+    return '../' + rel;
+  }
 
   const inputIdx = src.indexOf('/input/questions/');
   if(inputIdx >= 0) return '..' + src.slice(inputIdx);
@@ -723,7 +748,12 @@ function deriveState(){
   };
   if(!s.tasks) s.tasks = structuredClone(taskDefaults);
   for(const ev of orderedEvents()){
-    if(ev.type==='project_started'){ s.project=ev.project; s.source=ev.source; s.output=ev.output; s.phase='started'; }
+    if(ev.type==='project_started'){
+      s.project=ev.project;
+      s.source=preferSourcePath(s.source, ev.source);
+      s.output=ev.output;
+      s.phase='started';
+    }
     if(ev.type==='agent_started'){
       if(ev.task && ev.task!=='planning'){ s.phase='task_loop'; s.current_task=ev.task; }
       if(ev.role==='question-planner') s.phase='planning';

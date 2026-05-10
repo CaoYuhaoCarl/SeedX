@@ -8,6 +8,8 @@
 #   +ask：<body>         → same as +ask <body> (Chinese full-width colon)
 #   +ask-strict <body>   → same as inline +ask body
 #   +start [path]        → launch from given path, or most recent question file
+#   qtm <body>           → save body and launch
+#   用 qtm 调研问题：<body> → save body and launch
 #
 # Anything else is passed through untouched.
 #
@@ -119,6 +121,32 @@ strip_prefix() {
   local prefix="$1"
   printf '%s' "$PROMPT" | perl -0777 -pe "s|^\\Q${prefix}\\E[\\s:：]+||"
 }
+
+extract_natural_qtm_body() {
+  printf '%s' "$PROMPT" | perl -0777 -ne '
+    if (/^\s*(?:用\s*)?qtm\s*(?:(?:调研|研究|学习|处理|分析)\s*)?问题\s*[:：]\s*(\S[\s\S]*)$/i) {
+      print $1;
+      exit;
+    }
+    if (/^\s*qtm\s+(\S[\s\S]*)$/i) {
+      print $1;
+    }
+  '
+}
+
+# ---------------------------------------------------------------------------
+# Chinese natural-language launcher:
+#   qtm <body>
+#   用 qtm 调研问题：<body>
+#   用 QTM 研究问题:<body>
+# These patterns are intentionally anchored so ordinary mentions pass through.
+# ---------------------------------------------------------------------------
+natural_qtm_body=$(extract_natural_qtm_body)
+if [[ -n "${natural_qtm_body//[[:space:]]/}" ]]; then
+  rel=$(save_body "$natural_qtm_body")
+  emit_launch "$rel"
+  exit 0
+fi
 
 # ---------------------------------------------------------------------------
 # +ask-strict <body>  — save then BLOCK; user must follow up with +start.
