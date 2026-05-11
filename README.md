@@ -16,17 +16,37 @@
 
 A multi-agent learning path generation system: give it a learning question, and it produces an independently evaluated, directly executable path toward mastery.
 
-```text
-Learning question
-  ↓
-question-planner  Creates the Learning Contract and design guide
-  ↓
-mastery-builder   Generates learning artifacts task by task
-  ↓
-learning-evaluator  Independently evaluates PASS/FAIL
-  ↓
-On FAIL, resume the same Builder for fixes and the same Evaluator for re-checks
-(up to 2 repair rounds)
+```mermaid
+flowchart TD
+    A[input/questions/*.md] --> O[main orchestrator]
+    O --> R[_run/events.jsonl + _run/state.json]
+    O --> V[harness visualizer]
+    R --> V
+
+    O --> B[question-planner]
+    B --> C[_agent/learning-contract.md]
+    B --> C2[_agent/learning-design-guide.md]
+    B --> C3[_agent/project-lessons.md]
+
+    O --> D[mastery-builder]
+    C --> D
+    C2 --> D
+    C3 --> D
+    D --> E[deliverables/*.md]
+
+    O --> F[learning-evaluator]
+    C --> F
+    E --> F
+    F --> G{PASS?}
+
+    G -- Yes --> H{next task?}
+    H -- Yes --> D
+    H -- No --> Z[finish]
+
+    G -- No --> I[repair same builder]
+    I --> J[re-check same evaluator]
+    J --> G
+    G -- No after 2 rounds --> Q[LOW_QUALITY_PASS]
 ```
 
 By default, the system is not bound to any specific user, industry, profession, or application scenario. Personalization comes only from the background, goals, and constraints explicitly written in the input file.

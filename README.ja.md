@@ -16,17 +16,37 @@
 
 Question-to-Mastery は、学習質問を入力すると、独立評価済みでそのまま実行できる「習得までの学習パス」を生成するマルチエージェントシステムです。
 
-```text
-学習質問
-  ↓
-question-planner  Learning Contract と設計ガイドを作成
-  ↓
-mastery-builder   タスクごとに学習成果物を生成
-  ↓
-learning-evaluator  PASS/FAIL を独立評価
-  ↓
-FAIL の場合、同じ Builder を resume して修正し、
-同じ Evaluator で再評価する（最大 2 回）
+```mermaid
+flowchart TD
+    A[input/questions/*.md] --> O[メインオーケストレーター]
+    O --> R[_run/events.jsonl + _run/state.json]
+    O --> V[harness visualizer]
+    R --> V
+
+    O --> B[question-planner]
+    B --> C[_agent/learning-contract.md]
+    B --> C2[_agent/learning-design-guide.md]
+    B --> C3[_agent/project-lessons.md]
+
+    O --> D[mastery-builder]
+    C --> D
+    C2 --> D
+    C3 --> D
+    D --> E[deliverables/*.md]
+
+    O --> F[learning-evaluator]
+    C --> F
+    E --> F
+    F --> G{PASS?}
+
+    G -- Yes --> H{次のタスク?}
+    H -- Yes --> D
+    H -- No --> Z[完了]
+
+    G -- No --> I[同じ builder を resume して修正]
+    I --> J[同じ evaluator を resume して再評価]
+    J --> G
+    G -- No after 2 rounds --> Q[LOW_QUALITY_PASS]
 ```
 
 このシステムは、デフォルトでは特定のユーザー、業界、職種、利用シーンに結びつきません。個別化は、入力ファイルに明示された背景、目標、制約からのみ行われます。

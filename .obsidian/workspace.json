@@ -4,21 +4,37 @@
     "type": "split",
     "children": [
       {
-        "id": "0bdf3303d30ac5a2",
+        "id": "1a62cfc754a4095f",
         "type": "tabs",
         "children": [
           {
-            "id": "e8dc8470e73578e3",
+            "id": "b678cdd9b7937b5e",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "webviewer",
               "state": {
-                "file": "output/agent-payment-forms-260510-005023/deliverables/agent-payment-research.md",
-                "mode": "source",
-                "source": false
+                "url": "http://127.0.0.1:8765/tools/harness-visualizer.html?project=agent-era-260511-154949",
+                "title": "Harness Visualizer",
+                "mode": "webview"
               },
-              "icon": "lucide-file",
-              "title": "agent-payment-research"
+              "icon": "globe-2",
+              "title": "Harness Visualizer"
+            }
+          }
+        ]
+      },
+      {
+        "id": "b3fded82d6cb37b8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "02e0856d8722f21a",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "关系图谱"
             }
           }
         ]
@@ -44,7 +60,7 @@
                 "autoReveal": false
               },
               "icon": "lucide-folder-closed",
-              "title": "Files"
+              "title": "文件列表"
             }
           },
           {
@@ -78,7 +94,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 231.5
   },
   "right": {
     "id": "3a286592fd307c30",
@@ -88,6 +104,16 @@
         "id": "2ac8800126af36d6",
         "type": "tabs",
         "children": [
+          {
+            "id": "6d470b52f0b7bfc9",
+            "type": "leaf",
+            "state": {
+              "type": "claudian-view",
+              "state": {},
+              "icon": "bot",
+              "title": "Claudian"
+            }
+          },
           {
             "id": "2555096ab74b33b2",
             "type": "leaf",
@@ -103,7 +129,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "反向链接"
             }
           },
           {
@@ -166,57 +192,57 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 482.5
   },
   "left-ribbon": {
     "hiddenItems": {
-      "switcher:Open quick switcher": false,
-      "graph:Open graph view": false,
-      "canvas:Create new canvas": false,
-      "daily-notes:Open today's daily note": false,
-      "templates:Insert template": false,
-      "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false,
+      "claudian:Open Claudian": false
     }
   },
-  "active": "e8dc8470e73578e3",
+  "active": "02e0856d8722f21a",
   "lastOpenFiles": [
-    "output/ningbo-public-opinion-monitoring-system-260510-144802/_agent/review-reports/task03-evaluation.md",
-    "output/ningbo-public-opinion-monitoring-system-260510-144802/deliverables/transfer-plan.md",
-    "output/ningbo-public-opinion-monitoring-system-260510-144802/deliverables/application-plan.md",
-    "output/ningbo-public-opinion-monitoring-system-260510-144802/_agent/review-reports/task02-evaluation.md",
-    "output/ningbo-public-opinion-monitoring-system-260510-144802/deliverables/checkpoints.md",
-    "output/ningbo-public-opinion-monitoring-system-260510-144802/deliverables/exercises.md",
-    "output/ningbo-public-opinion-monitoring-system-260510-144802/deliverables/learning-path.md",
-    "output/rebirth-mini-game-260510-145140/_agent/review-reports/task02-evaluation.md",
-    "output/rebirth-mini-game-260510-145140/deliverables/learning-path.md",
-    "output/rebirth-mini-game-260510-145140/deliverables/checkpoints.md",
-    "output/rebirth-mini-game-260510-145140/deliverables/transfer-plan.md",
-    "output/rebirth-mini-game-260510-145140/_agent/review-reports/task03-evaluation.md",
-    "output/rebirth-mini-game-260510-145140/deliverables/application-plan.md",
-    "output/rebirth-mini-game-260510-145140/_agent/review-reports/task01-evaluation.md",
-    "output/rebirth-mini-game-260510-145140/deliverables/exercises.md",
-    "output/wechat-group-indie-site-ai-crossborder-ecommerce-260510-145643/deliverables/manual-fallback-scaffold.md",
-    "output/wechat-group-indie-site-ai-crossborder-ecommerce-260510-145643/deliverables",
-    "output/wechat-group-indie-site-ai-crossborder-ecommerce-260510-145643/_run/state.json",
-    "output/wechat-group-indie-site-ai-crossborder-ecommerce-260510-145643/_run/run-log.md",
-    "output/wechat-group-indie-site-ai-crossborder-ecommerce-260510-145643/_run",
-    "output/wechat-group-indie-site-ai-crossborder-ecommerce-260510-145643",
-    "output/wechat-chat-summary-agent-system-260510-144933/_agent/review-reports/task01-evaluation.md",
-    "output/obsidian-hermes-openclaw-custom-system-260510-144825/_agent/review-reports/task01-evaluation.md",
-    "input/questions/question-source-wechat-group-indie-site-ai-crossborder-ecommerce-260510-145643.md",
-    "output/rebirth-mini-game-260510-145140/deliverables/domain-map.md",
-    "output/ningbo-university-hackathon-plan-budget-260510-145024/deliverables/question-brief.md",
-    "output/ningbo-public-opinion-monitoring-system-260510-144802/_agent/review-reports/task01-evaluation.md",
-    "output/wechat-chat-summary-agent-system-260510-144933/deliverables/domain-map.md",
-    "output/rebirth-mini-game-260510-145140/deliverables/question-brief.md",
-    "output/obsidian-hermes-openclaw-custom-system-260510-144825/deliverables/domain-map.md",
-    "output/question-260509-201921/_run/state.json",
-    "output/question-260509-201921/_run/events.jsonl",
-    "output/question-260509-201921/_agent/review-reports",
-    "output/question-260509-201921/deliverables",
-    "output/question-260509-201921/_run",
-    "output/question-260509-201921/_agent"
+    "AGENTS.md",
+    "output/agent-era-260511-154949/_agent/review-reports/task03-evaluation.md",
+    "output/agent-era-260511-154949/deliverables/transfer-plan.md",
+    "output/agent-era-260511-154949/deliverables/application-plan.md",
+    "output/agent-era-260511-154949/_agent/review-reports/task02-evaluation.md",
+    "state.md",
+    "output/agent-era-260511-154949/deliverables/checkpoints.md",
+    "output/agent-era-260511-154949/deliverables/exercises.md",
+    "output/agent-era-260511-154949/deliverables/learning-path.md",
+    "output/agent-era-260511-154949/_agent/review-reports/task01-evaluation.md",
+    "output/agent-era-260511-154949/deliverables/domain-map.md",
+    "output/agent-era-260511-154949/deliverables/question-brief.md",
+    "output/agent-era-260511-154949/_agent/project-lessons.md",
+    "output/agent-era-260511-154949/_agent/learning-design-guide.md",
+    "output/agent-era-260511-154949/_agent/learning-contract.md",
+    "output/agent-era-260511-154949/_agent/learning-plan.md",
+    "github/agents/gita.agent.md",
+    "output/agent-era-260511-154949/_run/state.json",
+    "output/agent-era-260511-154949/_run/events.jsonl",
+    "output/agent-era-260511-154949/_run/run-log.md",
+    "output/agent-era-260511-154949/README.md",
+    "output/agent-era-260511-154949/_agent/review-reports",
+    "output/agent-era-260511-154949/deliverables",
+    "output/agent-era-260511-154949/_run",
+    "output/agent-era-260511-154949/_agent",
+    "output/agent-era-260511-154949",
+    "input/questions/question-source-agent-era-260511-154949.md",
+    "input/questions/question-260511-154949.md",
+    "output/agent-payment-forms-260510-005023/deliverables/agent-payment-research.md",
+    "github/agents",
+    "github",
+    "git/logs/refs/remotes/origin/main",
+    "output/sharing-session-summary-260510-221236/_agent/review-reports/task03-evaluation.md",
+    "output/sharing-session-summary-260510-221236/deliverables/transfer-plan.md",
+    "output/sharing-session-summary-260510-221236/deliverables/application-plan.md",
+    "output/sharing-session-summary-260510-221236/_agent/review-reports/task02-evaluation.md"
   ]
 }

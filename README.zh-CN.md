@@ -16,16 +16,37 @@
 
 一个多智能体学习路径生成系统：输入一个学习问题，输出一套经过独立评估、可直接执行的学习掌握路径。
 
-```text
-学习问题
-  ↓
-question-planner  生成 Learning Contract 和设计指引
-  ↓
-mastery-builder   逐任务生成学习产物
-  ↓
-learning-evaluator  独立评估 PASS/FAIL
-  ↓
-FAIL 时 resume 同一 Builder 修正、同一 Evaluator 复评（最多 2 轮）
+```mermaid
+flowchart TD
+    A[input/questions/*.md] --> O[主编排器]
+    O --> R[_run/events.jsonl + _run/state.json]
+    O --> V[harness visualizer]
+    R --> V
+
+    O --> B[question-planner]
+    B --> C[_agent/learning-contract.md]
+    B --> C2[_agent/learning-design-guide.md]
+    B --> C3[_agent/project-lessons.md]
+
+    O --> D[mastery-builder]
+    C --> D
+    C2 --> D
+    C3 --> D
+    D --> E[deliverables/*.md]
+
+    O --> F[learning-evaluator]
+    C --> F
+    E --> F
+    F --> G{PASS?}
+
+    G -- Yes --> H{还有下一任务?}
+    H -- Yes --> D
+    H -- No --> Z[完成]
+
+    G -- No --> I[resume 同一 builder 修正]
+    I --> J[resume 同一 evaluator 复评]
+    J --> G
+    G -- No after 2 rounds --> Q[LOW_QUALITY_PASS]
 ```
 
 系统默认不绑定任何特定用户、行业、职业或应用场景。个性化只来自输入文件中显式写出的背景、目标和约束。
