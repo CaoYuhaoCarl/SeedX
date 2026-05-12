@@ -129,14 +129,14 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
 - [ ] Rename or replace `docs/assets/question-to-mastery-banner.png` if a SeedX
   banner is available.
 - [x] Update image references and alt text in all READMEs.
-- [ ] Update architecture docs:
+- [x] Update architecture docs:
   - `docs/adr/0001-question-to-mastery-architecture.md`
   - `docs/plans/harness-observability-visualization-plan.md`
   - `docs/specs/run-log-format.md`
   - `docs/specs/harness-observability-events.md`
   - `docs/roadmap/ROADMAP.md`
-- [ ] Decide whether to rename ADR filenames. If renamed, leave a short redirect
-  stub or compatibility note so old links are still understandable.
+- [x] Decide whether to rename ADR filenames. Decision: keep existing ADR
+  filenames for stable links and put SeedX in the document title/body.
 
 ## Phase 5 - Internal Naming Pass
 

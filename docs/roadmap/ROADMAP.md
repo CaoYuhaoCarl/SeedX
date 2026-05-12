@@ -1,6 +1,6 @@
-# Question-to-Mastery Roadmap
+# SeedX Roadmap
 
-> 本文件记录后续版本计划，避免 smoke test 后遗忘。它不是当前运行产物，而是项目级开发路线。
+> 本文件记录后续版本计划，避免 smoke test 后遗忘。它不是当前运行产物，而是项目级开发路线。SeedX 前身为 Question-to-Mastery。
 
 **当前版本：MVP v0.1**  
 **当前架构：3 agent types + 2 skills**
@@ -28,7 +28,7 @@ Skills:
 
 ---
 
-## v0.1 — MVP: Question-to-Mastery 基础闭环
+## v0.1 — MVP: SeedX 基础闭环
 
 ### 状态
 
@@ -221,7 +221,7 @@ source-to-question-map.md
 
 ### 风险
 
-Source 输入容易让 Builder 变成总结器。必须坚持 question-to-mastery，不是 source summary。
+Source 输入容易让 Builder 变成总结器。必须坚持“问题到掌握”的路径生成，不是 source summary。
 
 ---
 
@@ -299,7 +299,7 @@ scenario-based-activity.md
 
 ### 目标
 
-让 Question-to-Mastery Harness 不只绑定 Claude Code，也能被 Codex 等遵循仓库 agent 指令的运行时直接使用。
+让 SeedX Harness 不只绑定 Claude Code，也能被 Codex 等遵循仓库 agent 指令的运行时直接使用。
 
 ### 计划改动
 
@@ -332,7 +332,7 @@ scenario-based-activity.md
 
 ### 目标
 
-将 Question-to-Mastery 从“Agent 按协议自觉执行”升级为“程序化 runtime 保证流程，Agent 只负责生成/评估”的生产级架构。
+将 SeedX 从“Agent 按协议自觉执行”升级为“程序化 runtime 保证流程，Agent 只负责生成/评估”的生产级架构。
 
 ### 目标架构
 
@@ -464,7 +464,7 @@ Skills / Prompts
 
 ---
 
-## v1.0 — Stable Question-to-Mastery Harness
+## v1.0 — Stable SeedX Harness
 
 ### 目标
 

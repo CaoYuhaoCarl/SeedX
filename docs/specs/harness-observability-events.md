@@ -1,6 +1,6 @@
 # Harness Observability Events Schema
 
-> v0.2-observability: lightweight event stream and state snapshot for Question-to-Mastery Harness.
+> v0.2-observability: lightweight event stream and state snapshot for SeedX Harness.
 
 This schema is intentionally limited to workflow metadata. It must not contain learning source body, builder deliverable body, full evaluation reports, or internal agent reasoning.
 

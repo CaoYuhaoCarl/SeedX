@@ -1,8 +1,9 @@
-# ADR 0001: Question-to-Mastery Harness Architecture
+# ADR 0001: SeedX Harness Architecture
 
 - Status: Accepted
 - Date: 2026-05-07
-- Project: Question-to-Mastery Harness
+- Project: SeedX Harness
+- Formerly: Question-to-Mastery Harness
 - Related roadmap: `docs/roadmap/ROADMAP.md`
 - Reference: https://www.anthropic.com/engineering/harness-design-long-running-apps
 
@@ -10,7 +11,7 @@
 
 ## Context
 
-Question-to-Mastery is a multi-agent harness that converts a learning question into an independently evaluated, directly executable learning path.
+SeedX is a multi-agent harness, formerly named Question-to-Mastery, that converts a learning question into an independently evaluated, directly executable learning path.
 
 The core harness pattern:
 
@@ -32,7 +33,7 @@ This architecture keeps the main agent context clean, preserves task-local build
 
 ## Decision
 
-Use a **Question-to-Mastery MVP architecture** with:
+Use a **SeedX MVP architecture** with:
 
 ```text
 3 agent types:

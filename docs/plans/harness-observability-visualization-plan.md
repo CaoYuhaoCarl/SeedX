@@ -1,6 +1,6 @@
 # Harness Observability & Visualization Plan
 
-> 目标：让使用者能动态观察 Question-to-Mastery Harness 中主 Agent、Planner、Builder、Evaluator 之间的通讯、任务状态、PASS/FAIL、resume 修正循环，从而更直观理解 harness 架构。
+> 目标：让使用者能动态观察 SeedX Harness 中主 Agent、Planner、Builder、Evaluator 之间的通讯、任务状态、PASS/FAIL、resume 修正循环，从而更直观理解 harness 架构。
 
 ---
 
