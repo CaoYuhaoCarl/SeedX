@@ -4,7 +4,7 @@
 
 # SeedX
 
-<img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.1 MVP">
+<img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.2 MVP">
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
 <img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
 
@@ -17,6 +17,12 @@
 SeedX 是一个多智能体学习方案生成系统：把工作或学习中遇到的问题发给它，它会自动生成一套可执行、可评估、可迁移的系统学习方案。
 
 你可以从 Claude Code、Hermes、OpenClaw 或移动端工作流把问题交给 SeedX。它会规划学习目标、拆分任务、生成产物、独立评估、修复薄弱部分，并把 Agent 协作关系、handoff prompt、数据流和最终产物可视化留下来。
+
+## 效果预览
+
+<img src="docs/assets/seedx-run-preview.png" alt="SeedX 运行效果预览：可视化面板、Agent 协作图和学习产物索引" width="100%">
+
+<p align="center"><sub>一次 SeedX 运行结果：任务进度、Agent 交接、事件流和最终学习产物可以在同一工作区观察。</sub></p>
 
 ## 为什么做
 

@@ -4,7 +4,7 @@
 
 # SeedX
 
-<img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.1 MVP">
+<img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.2 MVP">
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
 <img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
 
@@ -17,6 +17,12 @@
 SeedX は、仕事や学習の中で出てきた問いを、実行可能・評価可能・転用可能な学習パッケージへ変換するマルチエージェントシステムです。
 
 Claude Code、Hermes、OpenClaw、またはモバイルのワークフローから質問を渡せます。SeedX は学習目標を設計し、タスクを分割し、成果物を生成し、独立評価し、弱い部分を修正し、Agent 間の協調、handoff prompt、データフロー、最終成果物を可視化できる形で残します。
+
+## プレビュー
+
+<img src="docs/assets/seedx-run-preview.png" alt="SeedX の実行プレビュー：可視化パネル、Agent 協調グラフ、学習パッケージの索引" width="100%">
+
+<p align="center"><sub>SeedX の完了済み run：タスク進捗、Agent handoff、イベントタイムライン、生成された学習成果物を同じワークスペースで観測できます。</sub></p>
 
 ## なぜ作るのか
 

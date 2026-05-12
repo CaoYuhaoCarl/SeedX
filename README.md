@@ -4,7 +4,7 @@
 
 # SeedX
 
-<img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.1 MVP">
+<img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.2 MVP">
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
 <img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
 
@@ -17,6 +17,12 @@
 SeedX is a multi-agent system that turns a work or learning question into a complete learning package: executable, evaluable, and transferable.
 
 Give it a question from Claude Code, Hermes, OpenClaw, or a mobile workflow. SeedX plans the learning goal, splits the work, builds the artifacts, evaluates them, repairs weak parts, and leaves a visible trail of agent collaboration, prompts, data flow, and outputs.
+
+## Preview
+
+<img src="docs/assets/seedx-run-preview.png" alt="SeedX run preview showing the visualizer, agent collaboration graph, and learning package index" width="100%">
+
+<p align="center"><sub>A completed SeedX run: task progress, agent handoffs, event timeline, and generated learning artifacts stay observable in one workspace.</sub></p>
 
 ## Why It Exists
 
