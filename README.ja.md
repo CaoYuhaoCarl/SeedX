@@ -117,9 +117,9 @@ SeedX は固定された 3 つのタスク単位を実行します。
 
 | Task | 目的 | 成果物 |
 |---|---|---|
-| `task01` | 問いと領域を整理する | `question-brief.md`, `domain-map.md` |
-| `task02` | 習得パスを作る | `learning-path.md`, `exercises.md`, `checkpoints.md` |
-| `task03` | 応用と転用を設計する | `application-plan.md`, `transfer-plan.md` |
+| `task01` | 問いと領域を整理する | `deliverables/question-brief.md`, `deliverables/domain-map.md` |
+| `task02` | 習得パスを作る | `deliverables/learning-path.md`, `deliverables/exercises.md`, `deliverables/checkpoints.md` |
+| `task03` | 応用と転用を設計する | `deliverables/application-plan.md`, `deliverables/transfer-plan.md` |
 
 各タスクは生成後に評価されます。FAIL の場合は同じ Builder を resume して修正し、最大 2 ラウンドまで再評価します。
 

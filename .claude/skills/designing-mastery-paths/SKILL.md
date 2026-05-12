@@ -126,9 +126,9 @@ description: |
 2. ...
 
 ## 固定任务单元
-- Task 1: Framing — question-brief.md + domain-map.md
-- Task 2: Mastery Path — learning-path.md + exercises.md + checkpoints.md
-- Task 3: Application & Transfer — application-plan.md + transfer-plan.md
+- Task 1: Framing — deliverables/question-brief.md + deliverables/domain-map.md
+- Task 2: Mastery Path — deliverables/learning-path.md + deliverables/exercises.md + deliverables/checkpoints.md
+- Task 3: Application & Transfer — deliverables/application-plan.md + deliverables/transfer-plan.md
 
 ## 合格标准
 1. 问题边界清晰。
@@ -150,8 +150,8 @@ MVP 固定 3 个任务单元，每个任务单元由主 Agent 单独启动 Build
 
 产物：
 
-- `question-brief.md`
-- `domain-map.md`
+- `deliverables/question-brief.md`
+- `deliverables/domain-map.md`
 
 目标：回答“我要学什么”和“这个领域的主干结构是什么”。
 
@@ -168,9 +168,9 @@ MVP 固定 3 个任务单元，每个任务单元由主 Agent 单独启动 Build
 
 产物：
 
-- `learning-path.md`
-- `exercises.md`
-- `checkpoints.md`
+- `deliverables/learning-path.md`
+- `deliverables/exercises.md`
+- `deliverables/checkpoints.md`
 
 目标：回答“我如何一步步掌握”和“如何验证掌握”。
 
@@ -186,8 +186,8 @@ MVP 固定 3 个任务单元，每个任务单元由主 Agent 单独启动 Build
 
 产物：
 
-- `application-plan.md`
-- `transfer-plan.md`
+- `deliverables/application-plan.md`
+- `deliverables/transfer-plan.md`
 
 目标：回答“这个知识如何变成行动、判断、项目、工作成果或可讲解内容”。
 

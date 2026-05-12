@@ -117,9 +117,9 @@ SeedX 固定执行三个任务单元：
 
 | Task | 目的 | 产物 |
 |---|---|---|
-| `task01` | 定义问题与领域地图 | `question-brief.md`, `domain-map.md` |
-| `task02` | 生成掌握路径 | `learning-path.md`, `exercises.md`, `checkpoints.md` |
-| `task03` | 应用与迁移 | `application-plan.md`, `transfer-plan.md` |
+| `task01` | 定义问题与领域地图 | `deliverables/question-brief.md`, `deliverables/domain-map.md` |
+| `task02` | 生成掌握路径 | `deliverables/learning-path.md`, `deliverables/exercises.md`, `deliverables/checkpoints.md` |
+| `task03` | 应用与迁移 | `deliverables/application-plan.md`, `deliverables/transfer-plan.md` |
 
 每个任务都会先生成、再评估；如果 FAIL，会 resume 同一个 Builder 修复，最多修复 2 轮后再进入下一步。
 

@@ -1,7 +1,7 @@
 ---
 name: mastery-builder
 description: |
-  SeedX 学习产物生成器。根据 learning-contract.md 和 learning-design-guide.md
+  SeedX 学习产物生成器。根据 _agent/learning-contract.md 和 _agent/learning-design-guide.md
   逐任务生成学习路径产物，并在评估失败后 resume 修正同一任务。
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: haiku
@@ -34,9 +34,9 @@ skills:
 
 ```text
 当前任务：task01/task02/task03
-learning-contract: {OUTPUT_DIR}/learning-contract.md
-learning-design-guide: {OUTPUT_DIR}/learning-design-guide.md
-project-lessons: {OUTPUT_DIR}/project-lessons.md
+learning-contract: {OUTPUT_DIR}/_agent/learning-contract.md
+learning-design-guide: {OUTPUT_DIR}/_agent/learning-design-guide.md
+project-lessons: {OUTPUT_DIR}/_agent/project-lessons.md
 输出目录：{OUTPUT_DIR}
 指定产物：{OUTPUTS}
 ```
@@ -54,6 +54,8 @@ project-lessons: {OUTPUT_DIR}/project-lessons.md
 ### 3. 生成规则
 
 - 严格按当前 task 的指定产物写文件。
+- `指定产物` 是相对于 `{OUTPUT_DIR}` 的路径；必须逐项写入 `{OUTPUT_DIR}/{指定产物}`。
+- 默认产物必须位于 `{OUTPUT_DIR}/deliverables/`；不得把学习产物写到 `{OUTPUT_DIR}` 根目录。
 - 不生成未被要求的额外学习产物。
 - 不把通用示例误写成输入中的真实背景。
 - 如果 `learning-contract.md` 写“背景未指定”，保持通用表达，不补个人/行业场景。
@@ -66,8 +68,8 @@ project-lessons: {OUTPUT_DIR}/project-lessons.md
 生成：
 
 ```text
-question-brief.md
-domain-map.md
+deliverables/question-brief.md
+deliverables/domain-map.md
 ```
 
 重点：
@@ -85,9 +87,9 @@ domain-map.md
 生成：
 
 ```text
-learning-path.md
-exercises.md
-checkpoints.md
+deliverables/learning-path.md
+deliverables/exercises.md
+deliverables/checkpoints.md
 ```
 
 重点：
@@ -103,8 +105,8 @@ checkpoints.md
 生成：
 
 ```text
-application-plan.md
-transfer-plan.md
+deliverables/application-plan.md
+deliverables/transfer-plan.md
 ```
 
 重点：
@@ -138,8 +140,9 @@ transfer-plan.md
 
 ```text
 当前任务：taskNN
-评估报告：{OUTPUT_DIR}/review-reports/taskNN-evaluation.md
+评估报告：{OUTPUT_DIR}/_agent/review-reports/taskNN-evaluation.md
 相关产物：{paths}
+project-lessons: {OUTPUT_DIR}/_agent/project-lessons.md
 ```
 
 步骤：

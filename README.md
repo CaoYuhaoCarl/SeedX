@@ -117,9 +117,9 @@ SeedX runs three fixed task units:
 
 | Task | Purpose | Outputs |
 |---|---|---|
-| `task01` | Frame the question | `question-brief.md`, `domain-map.md` |
-| `task02` | Build the mastery path | `learning-path.md`, `exercises.md`, `checkpoints.md` |
-| `task03` | Apply and transfer | `application-plan.md`, `transfer-plan.md` |
+| `task01` | Frame the question | `deliverables/question-brief.md`, `deliverables/domain-map.md` |
+| `task02` | Build the mastery path | `deliverables/learning-path.md`, `deliverables/exercises.md`, `deliverables/checkpoints.md` |
+| `task03` | Apply and transfer | `deliverables/application-plan.md`, `deliverables/transfer-plan.md` |
 
 Each task is built, evaluated, and repaired for up to two rounds before the system moves on.
 

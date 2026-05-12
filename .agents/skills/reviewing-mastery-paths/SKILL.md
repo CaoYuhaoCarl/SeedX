@@ -152,8 +152,8 @@ Additional hard gate:
 
 评估文件：
 
-- `question-brief.md`
-- `domain-map.md`
+- `deliverables/question-brief.md`
+- `deliverables/domain-map.md`
 
 重点维度：
 
@@ -167,9 +167,9 @@ User Context Fit 也必须检查：不能引入输入未提供的背景。Action
 
 评估文件：
 
-- `learning-path.md`
-- `exercises.md`
-- `checkpoints.md`
+- `deliverables/learning-path.md`
+- `deliverables/exercises.md`
+- `deliverables/checkpoints.md`
 
 重点维度：
 
@@ -183,8 +183,8 @@ User Context Fit 也必须检查：不能引入输入未提供的背景。Action
 
 评估文件：
 
-- `application-plan.md`
-- `transfer-plan.md`
+- `deliverables/application-plan.md`
+- `deliverables/transfer-plan.md`
 
 重点维度：
 
@@ -201,9 +201,9 @@ User Context Fit 也必须检查：不能引入输入未提供的背景。Action
 报告写入当前任务对应文件：
 
 ```text
-review-reports/task01-evaluation.md
-review-reports/task02-evaluation.md
-review-reports/task03-evaluation.md
+_agent/review-reports/task01-evaluation.md
+_agent/review-reports/task02-evaluation.md
+_agent/review-reports/task03-evaluation.md
 ```
 
 每次评估追加一个新轮次，不覆盖旧内容。

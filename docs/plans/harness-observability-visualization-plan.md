@@ -77,7 +77,7 @@ tools/
 
 ```json
 {"ts":"260507 1819","type":"agent_started","role":"mastery-builder","task":"task01","instance_id":"abc123"}
-{"ts":"260507 1823","type":"agent_finished","role":"mastery-builder","task":"task01","instance_id":"abc123","outputs":["question-brief.md","domain-map.md"]}
+{"ts":"260507 1823","type":"agent_finished","role":"mastery-builder","task":"task01","instance_id":"abc123","outputs":["deliverables/question-brief.md","deliverables/domain-map.md"]}
 ```
 
 ### 4.4 Evaluator 事件
@@ -165,8 +165,8 @@ Status: ✅ PASS
 Builder ID: abc123
 Evaluator ID: def456
 Iterations: 1
-Outputs: question-brief.md, domain-map.md
-Report: task01-evaluation.md
+Outputs: deliverables/question-brief.md, deliverables/domain-map.md
+Report: _agent/review-reports/task01-evaluation.md
 ```
 
 ### 6.4 Architecture Flow Diagram

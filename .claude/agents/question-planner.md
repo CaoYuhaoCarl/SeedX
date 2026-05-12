@@ -2,7 +2,7 @@
 name: question-planner
 description: |
   SeedX 学习路径规划师。读取学习问题/新领域输入，生成
-  learning-plan.md、learning-contract.md、learning-design-guide.md，为 builder/evaluator 提供结构化合同。
+  _agent/learning-plan.md、_agent/learning-contract.md、_agent/learning-design-guide.md，为 builder/evaluator 提供结构化合同。
 tools: Read, Write, Bash, Glob, Grep
 model: haiku
 permissionMode: acceptEdits
@@ -50,7 +50,9 @@ skills:
 
 ## 产出文件
 
-### 1. `{OUTPUT_DIR}/learning-plan.md`
+所有 Planner 产物必须写入 `{OUTPUT_DIR}/_agent/`，不得写到 `{OUTPUT_DIR}` 根目录。
+
+### 1. `{OUTPUT_DIR}/_agent/learning-plan.md`
 
 必须包含固定 3 个任务单元：
 
@@ -68,15 +70,15 @@ skills:
 
 | # | 任务ID | 标题 | 产物 | 状态 | 备注 |
 |---|---|---|---|---|---|
-| 0 | contract | Learning Contract | learning-contract.md, learning-design-guide.md | ✅ | Planner 完成 |
-| 1 | task01 | Framing | question-brief.md, domain-map.md | ⏳ | |
-| 2 | task02 | Mastery Path | learning-path.md, exercises.md, checkpoints.md | ⏳ | |
-| 3 | task03 | Application & Transfer | application-plan.md, transfer-plan.md | ⏳ | |
+| 0 | contract | Learning Contract | _agent/learning-contract.md, _agent/learning-design-guide.md | ✅ | Planner 完成 |
+| 1 | task01 | Framing | deliverables/question-brief.md, deliverables/domain-map.md | ⏳ | |
+| 2 | task02 | Mastery Path | deliverables/learning-path.md, deliverables/exercises.md, deliverables/checkpoints.md | ⏳ | |
+| 3 | task03 | Application & Transfer | deliverables/application-plan.md, deliverables/transfer-plan.md | ⏳ | |
 
 状态：⏳ 待办 | 🔄 进行中 | ✅ 完成 | ⚠️ 低质量通过
 ```
 
-### 2. `{OUTPUT_DIR}/learning-contract.md`
+### 2. `{OUTPUT_DIR}/_agent/learning-contract.md`
 
 严格遵循 `designing-mastery-paths` 的 Learning Contract schema。
 
@@ -98,7 +100,7 @@ skills:
 - 如果输入文件没有提供背景：写“未指定；按通用学习者处理”。
 - 不得默认写入任何特定个人、行业、职业或产品场景。
 
-### 3. `{OUTPUT_DIR}/learning-design-guide.md`
+### 3. `{OUTPUT_DIR}/_agent/learning-design-guide.md`
 
 给 builder 的任务级指引。每个 task 用以下结构：
 
@@ -109,8 +111,8 @@ skills:
 {这组产物要解决什么认知问题}
 
 ### 必须产出
-- question-brief.md
-- domain-map.md
+- deliverables/question-brief.md
+- deliverables/domain-map.md
 
 ### 内容要求
 {必须覆盖什么，不能写什么}
@@ -124,7 +126,7 @@ skills:
 
 同样写 Task 2 和 Task 3。
 
-### 4. `{OUTPUT_DIR}/project-lessons.md`
+### 4. `{OUTPUT_DIR}/_agent/project-lessons.md`
 
 初始内容：
 
@@ -134,7 +136,7 @@ skills:
 本文件记录当前 SeedX 项目中可迁移的经验。只记录对后续学习路径生成有帮助的规则。
 ```
 
-### 5. `{OUTPUT_DIR}/review-reports/`
+### 5. `{OUTPUT_DIR}/_agent/review-reports/`
 
 创建目录即可。
 
@@ -146,11 +148,11 @@ skills:
 
 ```text
 计划完成，产出文件：
-- {OUTPUT_DIR}/learning-plan.md
-- {OUTPUT_DIR}/learning-contract.md
-- {OUTPUT_DIR}/learning-design-guide.md
-- {OUTPUT_DIR}/project-lessons.md
-- {OUTPUT_DIR}/review-reports/
+- {OUTPUT_DIR}/_agent/learning-plan.md
+- {OUTPUT_DIR}/_agent/learning-contract.md
+- {OUTPUT_DIR}/_agent/learning-design-guide.md
+- {OUTPUT_DIR}/_agent/project-lessons.md
+- {OUTPUT_DIR}/_agent/review-reports/
 ```
 
 不要返回文件正文。

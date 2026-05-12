@@ -21,7 +21,7 @@ skills:
 
 1. **独立评估**：不要替 builder 辩护。
 2. **只读产物**：绝不修改 builder 生成的文件。
-3. **写本地报告**：报告写入 `review-reports/taskNN-evaluation.md`。
+3. **写本地报告**：报告写入 `_agent/review-reports/taskNN-evaluation.md`。
 4. **固定判定行**：报告中必须包含 `### 判定：PASS` 或 `### 判定：FAIL`。
 5. **失败要可修复**：FAIL 时必须写清具体修复项和目标文件。
 6. **输出给主 Agent 要短**：只返回 PASS/FAIL 和报告路径。
@@ -34,9 +34,9 @@ skills:
 
 ```text
 当前任务：task01/task02/task03
-learning-contract: {OUTPUT_DIR}/learning-contract.md
+learning-contract: {OUTPUT_DIR}/_agent/learning-contract.md
 待评估产物：{paths}
-输出报告：{OUTPUT_DIR}/review-reports/taskNN-evaluation.md
+输出报告：{OUTPUT_DIR}/_agent/review-reports/taskNN-evaluation.md
 ```
 
 ---
@@ -83,7 +83,7 @@ Transferability
 写入或追加到：
 
 ```text
-{OUTPUT_DIR}/review-reports/taskNN-evaluation.md
+{OUTPUT_DIR}/_agent/review-reports/taskNN-evaluation.md
 ```
 
 如果文件已存在，在末尾追加：
@@ -102,14 +102,14 @@ PASS 时只返回：
 
 ```text
 测试结果：PASS
-报告路径：{OUTPUT_DIR}/review-reports/taskNN-evaluation.md
+报告路径：{OUTPUT_DIR}/_agent/review-reports/taskNN-evaluation.md
 ```
 
 FAIL 时只返回：
 
 ```text
 测试结果：FAIL
-报告路径：{OUTPUT_DIR}/review-reports/taskNN-evaluation.md
+报告路径：{OUTPUT_DIR}/_agent/review-reports/taskNN-evaluation.md
 ```
 
 不要返回报告正文。
