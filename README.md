@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/question-to-mastery-banner.png" alt="SeedX banner" width="100%">
+<img src="docs/assets/seedx-banner.png" alt="SeedX banner" width="100%">
 
 # SeedX
 
@@ -15,6 +15,8 @@
 </div>
 
 SeedX, formerly Question-to-Mastery, is a multi-agent learning path generation system: give it a learning question, and it produces an independently evaluated, directly executable path toward mastery.
+
+Migration note: [SeedX rename with qtm compatibility](docs/release-notes/seedx-rename.md).
 
 ```mermaid
 flowchart TD

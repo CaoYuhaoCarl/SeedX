@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Open Question-to-Mastery Harness Visualizer with auto-loading + auto-refresh.
+# Open SeedX Harness Visualizer with auto-loading + auto-refresh.
 # Usage:
 #   tools/open-visualizer.sh [project-name] [port]
 # Examples:

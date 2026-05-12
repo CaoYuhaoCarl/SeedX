@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/question-to-mastery-banner.png" alt="SeedX banner" width="100%">
+<img src="docs/assets/seedx-banner.png" alt="SeedX banner" width="100%">
 
 # SeedX
 
@@ -15,6 +15,8 @@
 </div>
 
 SeedX（前身为 Question-to-Mastery）是一个多智能体学习路径生成系统：输入一个学习问题，输出一套经过独立评估、可直接执行的学习掌握路径。
+
+迁移说明：[SeedX rename with qtm compatibility](docs/release-notes/seedx-rename.md)。
 
 ```mermaid
 flowchart TD

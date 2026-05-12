@@ -126,8 +126,9 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
   - `+ask` / `+start` instructions stay unchanged
 - [x] Keep old-name discoverability in one short line:
   "Formerly Question-to-Mastery."
-- [ ] Rename or replace `docs/assets/question-to-mastery-banner.png` if a SeedX
-  banner is available.
+- [x] Add `docs/assets/seedx-banner.png` and update README references. Keep
+  `docs/assets/question-to-mastery-banner.png` as a compatibility asset for old
+  links because the image itself has no old-name text.
 - [x] Update image references and alt text in all READMEs.
 - [x] Update architecture docs:
   - `docs/adr/0001-question-to-mastery-architecture.md`
@@ -140,10 +141,11 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
 
 ## Phase 5 - Internal Naming Pass
 
-- [ ] Update comments in:
+- [x] Update tool comments in:
   - `tools/derive-project-name.py`
   - `tools/open-visualizer.sh`
-  - `.claude/hooks/intake-question.sh`
+- [x] Review `.claude/hooks/intake-question.sh` comments. Current `qtm`
+  mentions are intentional legacy-trigger examples, not stale product naming.
 - [x] Update `.claude/agents/*.md` and `.claude/skills/*.md` descriptions from
   Question-to-Mastery to SeedX where they describe the product.
 - [x] Update `.agents/skills/*.md` copies in the same way, if they are meant to
@@ -168,12 +170,12 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
 
 ## Phase 7 - Release Notes And User Migration
 
-- [ ] Add a short migration note:
+- [x] Add a short migration note:
   - "The project is now SeedX."
   - "`qtm` continues to work."
   - "Recommended new triggers: `seedx`, `seed`, `sx`, or `+ask`."
   - "Existing generated outputs and old links remain valid."
-- [ ] Add examples for old users:
+- [x] Add examples for old users:
   - old: `qtm <question>`
   - new: `seedx <question>`
   - safe one-step: copy question, then send `+ask`

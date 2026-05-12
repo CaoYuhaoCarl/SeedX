@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Derive a Question-to-Mastery project folder name.
+"""Derive a SeedX project folder name.
 
 The target shape is:
   english-topic-slug-yymmdd-HHMMSS

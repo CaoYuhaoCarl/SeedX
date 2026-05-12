@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/question-to-mastery-banner.png" alt="SeedX banner" width="100%">
+<img src="docs/assets/seedx-banner.png" alt="SeedX banner" width="100%">
 
 # SeedX
 
@@ -15,6 +15,8 @@
 </div>
 
 SeedX（旧 Question-to-Mastery）は、学習質問を入力すると、独立評価済みでそのまま実行できる「習得までの学習パス」を生成するマルチエージェントシステムです。
+
+移行メモ: [SeedX rename with qtm compatibility](docs/release-notes/seedx-rename.md)。
 
 ```mermaid
 flowchart TD
