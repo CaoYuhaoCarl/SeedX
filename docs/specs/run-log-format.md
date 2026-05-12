@@ -1,6 +1,6 @@
 # Run Log Format
 
-> `_run/run-log.md` is the human-readable run log for Question-to-Mastery Harness. Machine-readable workflow data belongs in `_run/events.jsonl` and `_run/state.json`.
+> `_run/run-log.md` is the human-readable run log for SeedX, formerly Question-to-Mastery. Machine-readable workflow data belongs in `_run/events.jsonl` and `_run/state.json`.
 
 ---
 
@@ -16,6 +16,8 @@
 6. Where are the output files and reports?
 
 It should not be the learner-facing package. The question asker should read `README.md` and `deliverables/` first. It should also not be a raw event dump; that is what `_run/events.jsonl` is for.
+
+Historical run logs may still use `# Question-to-Mastery Run Log — {PROJECT_NAME}`. New runs should use `# SeedX Run Log — {PROJECT_NAME}`; readers and visualizers should rely on `_run/events.jsonl` and `_run/state.json` for machine-readable state instead of parsing the brand text in this heading.
 
 ---
 
@@ -34,7 +36,7 @@ It should not be the learner-facing package. The question asker should read `REA
 ## Recommended Structure
 
 ```markdown
-# Question-to-Mastery Run Log — {PROJECT_NAME}
+# SeedX Run Log — {PROJECT_NAME}
 
 ## Run Metadata
 

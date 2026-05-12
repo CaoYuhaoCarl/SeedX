@@ -155,16 +155,16 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
 
 ## Phase 6 - Runtime Output Compatibility
 
-- [ ] Decide whether new runs should say
+- [x] Decide whether new runs should say
   `# SeedX Output - {PROJECT_NAME}` and `# SeedX Run Log - {PROJECT_NAME}`.
-- [ ] If changing run headings, update:
+- [x] If changing run headings, update:
   - `AGENTS.md`
   - `CLAUDE.md`
   - `docs/specs/run-log-format.md`
   - any visualizer parsing assumptions
-- [ ] Verify the visualizer reads `_run/events.jsonl` and `_run/state.json`
+- [x] Verify the visualizer reads `_run/events.jsonl` and `_run/state.json`
   without depending on old run-log headings.
-- [ ] Keep old output folders readable; do not migrate historical run logs.
+- [x] Keep old output folders readable; do not migrate historical run logs.
 
 ## Phase 7 - Release Notes And User Migration
 

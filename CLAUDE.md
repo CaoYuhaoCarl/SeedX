@@ -179,7 +179,7 @@ Every critical node MUST do all applicable updates before continuing:
 `README.md` 是项目入口和 Obsidian 友好的路径索引（使用 wiki-link 格式 `[[filename]]`），不是学习内容正文。提问者默认阅读 `deliverables/`，agent 和运行时默认使用 `_agent/` 与 `_run/`。
 
 ```markdown
-# Question-to-Mastery Output — {PROJECT_NAME}
+# SeedX Output — {PROJECT_NAME}
 
 ## 学习路径
 
@@ -209,7 +209,7 @@ Every critical node MUST do all applicable updates before continuing:
 ### 5.3 Initial `_run/run-log.md`
 
 ```markdown
-# Question-to-Mastery Run Log — {PROJECT_NAME}
+# SeedX Run Log — {PROJECT_NAME}
 
 ## Run Metadata
 
