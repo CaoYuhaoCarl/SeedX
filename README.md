@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/assets/question-to-mastery-banner.png" alt="Question-to-Mastery banner" width="100%">
+<img src="docs/assets/question-to-mastery-banner.png" alt="SeedX banner" width="100%">
 
-# Question-to-Mastery
+# SeedX
 
 <img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.1 MVP">
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
@@ -14,7 +14,7 @@
 
 </div>
 
-A multi-agent learning path generation system: give it a learning question, and it produces an independently evaluated, directly executable path toward mastery.
+SeedX, formerly Question-to-Mastery, is a multi-agent learning path generation system: give it a learning question, and it produces an independently evaluated, directly executable path toward mastery.
 
 ```mermaid
 flowchart TD
@@ -55,7 +55,7 @@ By default, the system is not bound to any specific user, industry, profession, 
 
 ## Quick Start
 
-### Slash trigger (recommended)
+### SeedX and +ask triggers (recommended)
 
 Copy the learning question body to your clipboard, then type into Claude Code:
 
@@ -78,16 +78,17 @@ When the question contains PII, trade secrets, or you want to maximize "main age
 
 | Trigger | Behavior | UX |
 |---|---|---|
+| `seedx <body>` / `seed <body>` / `sx <body>` / `用 seedx 调研问题：<body>` | Save and launch directly; the body remains visible in the original prompt | 1 step |
 | `+ask` (copy the body to clipboard first; no inline body) | Read via `pbpaste`, save, and launch | 1 step |
-| `qtm <body>` / `用 qtm 调研问题：<body>` / `用 QTM 研究问题:<body>` | Save and launch directly; the body remains visible in the original prompt | 1 step |
+| `qtm <body>` / `用 qtm 调研问题：<body>` / `用 QTM 研究问题:<body>` | Legacy-compatible direct launch; the body remains visible in the original prompt | 1 step |
 | `+ask <body>` / `+ask:<body>` / `+ask：<body>` / `+ask-strict <body>` | Save and block the original message; orchestrator only starts after you send `+start` | 2 steps |
 | `+start [path]` | Launch with explicit path, or the most recent question file | — |
 
-Clipboard mode launches in one step while keeping the body out of the main agent's context. Inline modes are blocked first because the body is already visible in the original user message. See [CLAUDE.md §1.2](CLAUDE.md) for the isolation contract.
+Clipboard mode launches in one step while keeping the body out of the main agent's context. Direct `seedx` / `seed` / `sx` and legacy `qtm` modes launch immediately because the body is already visible in the original user message. Inline `+ask` modes are blocked first for safer follow-up launch. See [CLAUDE.md §1.2](CLAUDE.md) for the isolation contract.
 
 ### Manual launch (advanced)
 
-If you want to override the project name or output directory, the legacy prompt still works:
+If you want to override the project name or output directory, the path-based prompt still works:
 
 ```text
 Learning question path: {WORKSPACE_DIR}/input/questions/{question-file}.md

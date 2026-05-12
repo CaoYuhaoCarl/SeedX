@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/assets/question-to-mastery-banner.png" alt="Question-to-Mastery banner" width="100%">
+<img src="docs/assets/question-to-mastery-banner.png" alt="SeedX banner" width="100%">
 
-# Question-to-Mastery
+# SeedX
 
 <img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.1 MVP">
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
@@ -14,7 +14,7 @@
 
 </div>
 
-Question-to-Mastery は、学習質問を入力すると、独立評価済みでそのまま実行できる「習得までの学習パス」を生成するマルチエージェントシステムです。
+SeedX（旧 Question-to-Mastery）は、学習質問を入力すると、独立評価済みでそのまま実行できる「習得までの学習パス」を生成するマルチエージェントシステムです。
 
 ```mermaid
 flowchart TD
@@ -55,7 +55,7 @@ flowchart TD
 
 ## クイックスタート
 
-### スラッシュトリガー（推奨）
+### SeedX と +ask トリガー（推奨）
 
 学習質問の本文をクリップボードにコピーしてから、Claude Code にこう打ちます：
 
@@ -78,16 +78,17 @@ flowchart TD
 
 | トリガー | 振る舞い | UX |
 |---|---|---|
+| `seedx <本文>` / `seed <本文>` / `sx <本文>` / `用 seedx 调研问题：<本文>` | 保存して直接起動。本文は元のプロンプトに見えたままです | 1 ステップ |
 | `+ask`（事前に本文をクリップボードへコピー。本文なし） | `pbpaste` で読み取り、保存して起動 | 1 ステップ |
-| `qtm <本文>` / `用 qtm 调研问题：<本文>` / `用 QTM 研究问题:<本文>` | 保存して直接起動。本文は元のプロンプトに見えたままです | 1 ステップ |
+| `qtm <本文>` / `用 qtm 调研问题：<本文>` / `用 QTM 研究问题:<本文>` | 旧ユーザー向け互換の直接起動。本文は元のプロンプトに見えたままです | 1 ステップ |
 | `+ask <本文>` / `+ask:<本文>` / `+ask：<本文>` / `+ask-strict <本文>` | 保存後、元メッセージを block。`+start` 送信後にオーケストレーター起動 | 2 ステップ |
 | `+start [path]` | 指定パスまたは最新の質問ファイルから起動 | — |
 
-クリップボードモードは 1 ステップで起動し、本文はメイン Agent の context に入りません。inline モードは本文が元メッセージに見えているため、先に block します。隔離契約の詳細は [CLAUDE.md §1.2](CLAUDE.md) を参照してください。
+クリップボードモードは 1 ステップで起動し、本文はメイン Agent の context に入りません。`seedx` / `seed` / `sx` と旧互換の `qtm` は、本文が元メッセージに見えているため直接起動します。inline `+ask` モードは安全な再起動のため先に block します。隔離契約の詳細は [CLAUDE.md §1.2](CLAUDE.md) を参照してください。
 
 ### 手動起動（上級）
 
-プロジェクト名や出力ディレクトリを上書きしたい場合は、従来のプロンプトも使えます：
+プロジェクト名や出力ディレクトリを上書きしたい場合は、パス指定のプロンプトも使えます：
 
 ```text
 学習質問パス: {WORKSPACE_DIR}/input/questions/{question-file}.md

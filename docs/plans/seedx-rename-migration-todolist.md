@@ -107,7 +107,7 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
   `+ask`, `+start`, `qtm`, `seedx`, `seed`, `sx`, and natural Chinese forms such
   as `用 seedx ...问题：`.
 - [x] Update `CLAUDE.md` with the same trigger rule.
-- [ ] Rename protocol headings from `Question-to-Mastery` to `SeedX` where the
+- [x] Rename protocol headings from `Question-to-Mastery` to `SeedX` where the
   heading is public-facing.
 - [x] Keep a compatibility note near the top:
   "`qtm` remains a legacy trigger and is intentionally supported."
@@ -118,17 +118,17 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
 
 ## Phase 4 - Public Documentation Rename
 
-- [ ] Update `README.md`, `README.zh-CN.md`, and `README.ja.md`:
+- [x] Update `README.md`, `README.zh-CN.md`, and `README.ja.md`:
   - title becomes `SeedX`
   - first paragraph introduces SeedX
   - trigger table shows SeedX aliases first
   - `qtm` row is labeled "legacy compatible"
   - `+ask` / `+start` instructions stay unchanged
-- [ ] Keep old-name discoverability in one short line:
+- [x] Keep old-name discoverability in one short line:
   "Formerly Question-to-Mastery."
 - [ ] Rename or replace `docs/assets/question-to-mastery-banner.png` if a SeedX
   banner is available.
-- [ ] Update image references and alt text in all READMEs.
+- [x] Update image references and alt text in all READMEs.
 - [ ] Update architecture docs:
   - `docs/adr/0001-question-to-mastery-architecture.md`
   - `docs/plans/harness-observability-visualization-plan.md`

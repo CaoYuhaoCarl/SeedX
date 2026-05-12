@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/assets/question-to-mastery-banner.png" alt="Question-to-Mastery banner" width="100%">
+<img src="docs/assets/question-to-mastery-banner.png" alt="SeedX banner" width="100%">
 
-# Question-to-Mastery
+# SeedX
 
 <img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.1 MVP">
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
@@ -14,7 +14,7 @@
 
 </div>
 
-一个多智能体学习路径生成系统：输入一个学习问题，输出一套经过独立评估、可直接执行的学习掌握路径。
+SeedX（前身为 Question-to-Mastery）是一个多智能体学习路径生成系统：输入一个学习问题，输出一套经过独立评估、可直接执行的学习掌握路径。
 
 ```mermaid
 flowchart TD
@@ -55,7 +55,7 @@ flowchart TD
 
 ## 快速开始
 
-### Slash 触发（推荐）
+### SeedX 与 +ask 触发（推荐）
 
 把学习问题正文复制到剪贴板，然后在 Claude Code 直接发：
 
@@ -78,16 +78,17 @@ flowchart TD
 
 | 触发 | 行为 | UX |
 |---|---|---|
+| `seedx <正文>` / `seed <正文>` / `sx <正文>` / `用 seedx 调研问题：<正文>` | 落盘并直接启动；正文会出现在本轮原始消息中 | 1 步 |
 | `+ask`（先把正文复制到剪贴板，不带 body） | 通过 `pbpaste` 落盘并启动 | 1 步 |
-| `qtm <正文>` / `用 qtm 调研问题：<正文>` / `用 QTM 研究问题:<正文>` | 落盘并直接启动；正文会出现在本轮原始消息中 | 1 步 |
+| `qtm <正文>` / `用 qtm 调研问题：<正文>` / `用 QTM 研究问题:<正文>` | 兼容旧用户的直接启动；正文会出现在本轮原始消息中 | 1 步 |
 | `+ask <正文>` / `+ask:<正文>` / `+ask：<正文>` / `+ask-strict <正文>` | 落盘并 block 原消息，等用户发 `+start` 启动 | 2 步 |
 | `+start [path]` | 启动指定文件或最近落盘的问题文件 | — |
 
-剪贴板模式是一键启动且正文不进入主 Agent context；inline 模式会先 block，因为正文已经出现在原始用户消息中。详见 [CLAUDE.md §1.2](CLAUDE.md)。
+剪贴板模式是一键启动且正文不进入主 Agent context；`seedx` / `seed` / `sx` 和兼容旧用户的 `qtm` 会直接启动，因为正文已经出现在原始用户消息中；inline `+ask` 模式会先 block 以便安全地二次启动。详见 [CLAUDE.md §1.2](CLAUDE.md)。
 
 ### 手动指定（高级）
 
-如果想自定义项目名或输出目录，仍可使用旧式提示：
+如果想自定义项目名或输出目录，仍可使用路径式提示：
 
 ```text
 学习问题路径：{WORKSPACE_DIR}/input/questions/{question-file}.md
