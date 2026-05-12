@@ -7,116 +7,70 @@
 <img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.1 MVP">
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
 <img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
-<a href="https://x.com/CaoYuhaoCarl"><img src="https://img.shields.io/badge/follow-%40CaoYuhaoCarl-000000?logo=x&logoColor=white" alt="Follow on X"></a>
-<img src="https://img.shields.io/badge/WeChat-caoyuhaocarl-07C160?logo=wechat&logoColor=white" alt="WeChat caoyuhaocarl">
 
 <a href="README.md">🇺🇸 English</a> · <a href="README.zh-CN.md">🇨🇳 简体中文</a> · 🇯🇵 **日本語**
 
+<p><strong>すべてのアイデアは、ひとつのシステムへと育っていく。</strong></p>
+
 </div>
 
-SeedX（旧 Question-to-Mastery）は、学習質問を入力すると、独立評価済みでそのまま実行できる「習得までの学習パス」を生成するマルチエージェントシステムです。
+SeedX は、仕事や学習の中で出てきた問いを、実行可能・評価可能・転用可能な学習パッケージへ変換するマルチエージェントシステムです。
 
-移行メモ: [SeedX rename with qtm compatibility](docs/release-notes/seedx-rename.md)。
+Claude Code、Hermes、OpenClaw、またはモバイルのワークフローから質問を渡せます。SeedX は学習目標を設計し、タスクを分割し、成果物を生成し、独立評価し、弱い部分を修正し、Agent 間の協調、handoff prompt、データフロー、最終成果物を可視化できる形で残します。
 
-```mermaid
-flowchart TD
-    A[input/questions/*.md] --> O[メインオーケストレーター]
-    O --> R[_run/events.jsonl + _run/state.json]
-    O --> V[harness visualizer]
-    R --> V
+## なぜ作るのか
 
-    O --> B[question-planner]
-    B --> C[_agent/learning-contract.md]
-    B --> C2[_agent/learning-design-guide.md]
-    B --> C3[_agent/project-lessons.md]
+SeedX には 2 つの目的があります。
 
-    O --> D[mastery-builder]
-    C --> D
-    C2 --> D
-    C3 --> D
-    D --> E[deliverables/*.md]
+1. 学習者向け：曖昧な問いを、実際に進められる体系的な学習パッケージに変えること。
+2. Agent 開発者向け：モデル Agent が harness の中で、人手の介入なしに長い複数ステップの仕事を完了できるかを検証すること。
 
-    O --> F[learning-evaluator]
-    C --> F
-    E --> F
-    F --> G{PASS?}
+MiniMax M2.5/M2.7 などの中国発モデル Agent で、harness 下の長時間タスク実行能力を観察するための検証基盤でもあります。
 
-    G -- Yes --> H{次のタスク?}
-    H -- Yes --> D
-    H -- No --> Z[完了]
+現在の harness は 3 つの制約を中心に設計されています。
 
-    G -- No --> I[同じ builder を resume して修正]
-    I --> J[同じ evaluator を resume して再評価]
-    J --> G
-    G -- No after 2 rounds --> Q[LOW_QUALITY_PASS]
-```
-
-このシステムは、デフォルトでは特定のユーザー、業界、職種、利用シーンに結びつきません。個別化は、入力ファイルに明示された背景、目標、制約からのみ行われます。
-
----
+- 1 回の実行中に人手の介入を必要としない。
+- Agent の協調、prompt、状態、成果物を観測できる。
+- すべての学習パッケージは実行可能・評価可能・転用可能である。
 
 ## クイックスタート
 
-### SeedX と +ask トリガー（推奨）
+推奨フロー：
 
-学習質問の本文をクリップボードにコピーしてから、Claude Code にこう打ちます：
+1. 質問本文をクリップボードにコピーします。
+2. Claude Code、Hermes、OpenClaw、または接続済みの Agent 入口で送信します。
 
 ```text
 +ask
 ```
 
-`UserPromptSubmit` hook が自動で：
-- `pbpaste` でクリップボード本文を読み取り、`input/questions/question-source-<english-topic>-<timestamp>.md` に保存
-- パスと起動指示を注入し、メイン Agent が元の本文を見ない状態でオーケストレーターを開始
-- オーケストレーターがこの run の `_run/events.jsonl` + `_run/state.json` を初期化した後に Harness Visualizer を開く
+hook が質問を `input/questions/` に保存し、オーケストレーターを起動し、可視化パネルを開き、最終的な学習パッケージを `output/{english-topic-yymmdd-HHMMSS}/` に書き込みます。
 
-プロジェクト名と出力ディレクトリは同じ English topic + timestamp 形式を使います。例: `output/meme-ai-agent-260509-215509/`。
-
-`+ask <本文>` / `+ask:<本文>` / `+ask：<本文>` を直接送った場合、hook は本文を保存して元メッセージを block します。その後、表示された `+start <path>` を送って起動してください。これにより、メイン Agent が inline 本文を普通の Q&A として回答してしまうのを防ぎます。
-
-### 厳格隔離モード（機密質問向け）
-
-質問に PII、企業秘密が含まれる場合、または「メイン Agent が本文を一切見ない」純度を最大化したい場合：
-
-| トリガー | 振る舞い | UX |
-|---|---|---|
-| `seedx <本文>` / `seed <本文>` / `sx <本文>` / `用 seedx 调研问题：<本文>` | 保存して直接起動。本文は元のプロンプトに見えたままです | 1 ステップ |
-| `+ask`（事前に本文をクリップボードへコピー。本文なし） | `pbpaste` で読み取り、保存して起動 | 1 ステップ |
-| `qtm <本文>` / `用 qtm 调研问题：<本文>` / `用 QTM 研究问题:<本文>` | 旧ユーザー向け互換の直接起動。本文は元のプロンプトに見えたままです | 1 ステップ |
-| `+ask <本文>` / `+ask:<本文>` / `+ask：<本文>` / `+ask-strict <本文>` | 保存後、元メッセージを block。`+start` 送信後にオーケストレーター起動 | 2 ステップ |
-| `+start [path]` | 指定パスまたは最新の質問ファイルから起動 | — |
-
-クリップボードモードは 1 ステップで起動し、本文はメイン Agent の context に入りません。`seedx` / `seed` / `sx` と旧互換の `qtm` は、本文が元メッセージに見えているため直接起動します。inline `+ask` モードは安全な再起動のため先に block します。隔離契約の詳細は [CLAUDE.md §1.2](CLAUDE.md) を参照してください。
-
-### 手動起動（上級）
-
-プロジェクト名や出力ディレクトリを上書きしたい場合は、パス指定のプロンプトも使えます：
+明示的なファイルパスから起動することもできます。
 
 ```text
-学習質問パス: {WORKSPACE_DIR}/input/questions/{question-file}.md
-プロジェクト名: {english-topic-yymmdd-HHMMSS}
-出力ディレクトリ: {WORKSPACE_DIR}/output/{english-topic-yymmdd-HHMMSS}
-
-現在のワークスペースの CLAUDE.md に厳密に従ってください:
-- 現在のワークスペース: {WORKSPACE_DIR}
-- 学習質問パスは入力専用です。出力ディレクトリを入力ファイルのあるフォルダに設定しないでください
-- すべての生成物を出力ディレクトリに書き込んでください
-- デフォルトでは汎用的な学習者視点を維持してください。入力ファイルに明示された背景、目標、シーン、制約だけを learning-contract と成果物に反映できます
-- 初期化後、`README.md`、`_run/run-log.md`、`_run/events.jsonl`、`_run/state.json` を作成し、question-planner subagent を起動してください
++start input/questions/{question-file}.md
 ```
 
-入力例は `input/questions/` にあります。
-
----
-
-## 実行出力
-
-完全な 1 回の実行では、`output/{english-topic-yymmdd-HHMMSS}/` に次のファイルが生成されます。
+次の直接トリガーも互換対応しています。
 
 ```text
-output/{english-topic-yymmdd-HHMMSS}/
-├── README.md                  # パス索引。質問者はここから読む
-├── deliverables/              # 学習者の標準閲覧先
+seedx <質問>
+seed <質問>
+sx <質問>
+qtm <質問>
+```
+
+`qtm` は Question-to-Mastery 時代の legacy trigger として引き続き利用できます。
+
+## 何が生成されるか
+
+各 run は `output/` の下にプロジェクトディレクトリを作成します。
+
+```text
+output/{project}/
+├── README.md
+├── deliverables/
 │   ├── question-brief.md
 │   ├── domain-map.md
 │   ├── learning-path.md
@@ -124,117 +78,82 @@ output/{english-topic-yymmdd-HHMMSS}/
 │   ├── checkpoints.md
 │   ├── application-plan.md
 │   └── transfer-plan.md
-├── _agent/                    # agent 作業ファイル。標準閲覧先ではない
+├── _agent/
 │   ├── learning-plan.md
 │   ├── learning-contract.md
 │   ├── learning-design-guide.md
 │   ├── project-lessons.md
 │   └── review-reports/
-│       ├── task01-evaluation.md
-│       ├── task02-evaluation.md
-│       └── task03-evaluation.md
-└── _run/                      # 実行状態と可視化データ
+└── _run/
     ├── run-log.md
     ├── events.jsonl
     └── state.json
 ```
 
-分類ルールは [`docs/specs/output-artifact-layout.md`](docs/specs/output-artifact-layout.md) を参照してください。
+学習者が読む中心は `deliverables/` です。Agent の作業メモ、評価レポート、実行状態は `_agent/` と `_run/` に分けて保存されます。
 
----
+## 仕組み
 
-## 固定タスク単位
-
-| Task | 名前 | Builder の出力 | 評価レポート |
-|---|---|---|---|
-| task01 | Framing | `deliverables/question-brief.md`, `deliverables/domain-map.md` | `_agent/review-reports/task01-evaluation.md` |
-| task02 | Mastery Path | `deliverables/learning-path.md`, `deliverables/exercises.md`, `deliverables/checkpoints.md` | `_agent/review-reports/task02-evaluation.md` |
-| task03 | Application & Transfer | `deliverables/application-plan.md`, `deliverables/transfer-plan.md` | `_agent/review-reports/task03-evaluation.md` |
-
-タスクは `task01 → task02 → task03` の固定順で実行されます。各タスクは Build の後に Evaluate されます。PASS なら次のタスクへ進み、FAIL なら最大 2 回の修正ループに入ります。
-
----
-
-## ディレクトリ構成
-
-```text
-.
-├── CLAUDE.md                        # メイン Agent のオーケストレーションプロトコル
-├── README.md                        # 英語 README、デフォルト
-├── README.zh-CN.md                  # 簡体字中国語 README
-├── README.ja.md                     # 日本語 README
-├── input/questions/                 # 学習質問の入力ファイル
-├── output/{english-topic-yymmdd-HHMMSS}/ # 実行出力、プロジェクトごとに分離
-├── docs/
-│   ├── assets/                      # README とドキュメント用アセット
-│   ├── plans/                       # 実装計画
-│   ├── roadmap/                     # バージョンロードマップ
-│   ├── adr/                         # Architecture Decision Records
-│   └── specs/                       # イベントプロトコルとログ形式の仕様
-├── tools/
-│   ├── harness-visualizer.html      # 単一ファイルの可視化パネル
-│   └── open-visualizer.sh           # パネル起動スクリプト
-└── .claude/
-    ├── agents/
-    │   ├── question-planner.md
-    │   ├── mastery-builder.md
-    │   └── learning-evaluator.md
-    └── skills/
-        ├── designing-mastery-paths/
-        └── reviewing-mastery-paths/
+```mermaid
+flowchart LR
+    A[質問ファイル] --> P[question-planner]
+    P --> C[learning contract + design guide]
+    C --> B[mastery-builder]
+    B --> D[deliverables]
+    D --> E[learning-evaluator]
+    E -->|PASS| N[次のタスク]
+    E -->|FAIL| R[同じ builder を resume]
+    R --> E
+    E --> V[events + state visualizer]
 ```
 
----
+SeedX は固定された 3 つのタスク単位を実行します。
 
-## Observability 可視化
+| Task | 目的 | 成果物 |
+|---|---|---|
+| `task01` | 問いと領域を整理する | `question-brief.md`, `domain-map.md` |
+| `task02` | 習得パスを作る | `learning-path.md`, `exercises.md`, `checkpoints.md` |
+| `task03` | 応用と転用を設計する | `application-plan.md`, `transfer-plan.md` |
 
-v0.2 では軽量な観測レイヤーが追加されました。学習成果物の本文は読まず、実行状態だけを表示します。`+ask` / `+start` で起動すると、オーケストレーターがこの run の `_run/events.jsonl` + `_run/state.json` を初期化した後にパネルを開き、パネルがそれらのファイルをポーリングします。
+各タスクは生成後に評価されます。FAIL の場合は同じ Builder を resume して修正し、最大 2 ラウンドまで再評価します。
+
+## 可視化
+
+可視化パネルは実行状態だけを読み取り、学習成果物の本文は読みません。
 
 ```bash
-# 指定プロジェクトの _run/events.jsonl + _run/state.json を読み込み、2 秒ごとに更新するパネルを開く
-./tools/open-visualizer.sh {english-topic-yymmdd-HHMMSS}
-
-# プロジェクト名を省略すると、output/ 以下の最新プロジェクトを自動選択
-./tools/open-visualizer.sh
+./tools/open-visualizer.sh {project}
 ```
 
-イベントプロトコルは [docs/specs/harness-observability-events.md](docs/specs/harness-observability-events.md)、ログ形式は [docs/specs/run-log-format.md](docs/specs/run-log-format.md) を参照してください。
+プロジェクト名を省略すると、`output/` 以下の最新プロジェクトを開きます。
 
----
+長時間タスクの実行中に、どの Agent が動いているか、どの prompt が引き渡されたか、どのファイルが生成されたか、各タスクが評価を通過したかを確認できます。
 
-## 評価基準
+## 高度な使い方
 
-`learning-evaluator` は、1 から 5 で採点する 6 次元の rubric を使います。
+メインオーケストレーターにファイルパスだけを渡したい場合は `+ask` を使います。質問本文が元の chat メッセージに出てもよい場合は、`seedx <質問>` や `qtm <質問>` のような直接トリガーも使えます。
 
-| 次元 | 説明 |
-|---|---|
-| Question Quality | 質問が正しく理解され、焦点化されているか |
-| Coverage | ドメインの網羅性が十分か |
-| Clarity | 表現が明確で理解しやすいか |
-| Actionability | 出力をそのまま実行できるか |
-| User Context Fit | 個別化が入力ファイルに厳密に基づいているか |
-| Transferability | 知識を新しいシーンへ転移できるか |
+機密性の高い質問では、クリップボードモードを推奨します。
 
-すべての次元で 4/5 以上が PASS 条件です。追加のハードゲートとして、入力ファイルにない個人、業界、職種の背景を成果物が導入した場合は FAIL になります。
+```text
++ask
+```
 
----
+手動で制御したい場合は、まず `input/questions/` に質問ファイルを作成し、次を送信します。
 
-## チューニングガイド
+```text
++start input/questions/{question-file}.md
+```
 
-**成果物が汎用的すぎる場合:**
-1. まず `reviewing-mastery-paths` skill を調整し、Evaluator をより厳密にします。
-2. 次に `designing-mastery-paths` skill を調整し、Builder の生成目標をより明確にします。
-3. 新しい Agent の追加や Reviewer の分割は最後に検討します。
+## メンテナー向け
 
-**成果物が特定のユーザーや業界を誤って仮定している場合:**
-1. 入力ファイルがその背景を本当に提供しているか確認します。
-2. `_agent/learning-contract.md` の「学習者背景と応用シーン」を確認します。
-3. 最後に `reviewing-mastery-paths` の `User Context Fit` ハードゲートを調整します。
+- オーケストレーションプロトコル: [AGENTS.md](AGENTS.md)
+- Claude Code プロトコルミラー: [CLAUDE.md](CLAUDE.md)
+- 出力レイアウト: [docs/specs/output-artifact-layout.md](docs/specs/output-artifact-layout.md)
+- イベントプロトコル: [docs/specs/harness-observability-events.md](docs/specs/harness-observability-events.md)
+- run log 形式: [docs/specs/run-log-format.md](docs/specs/run-log-format.md)
+- リポジトリ衛生ルール: [docs/specs/repository-hygiene.md](docs/specs/repository-hygiene.md)
+- アーキテクチャ決定: [docs/adr/0001-question-to-mastery-architecture.md](docs/adr/0001-question-to-mastery-architecture.md)
+- SeedX rename note: [docs/release-notes/seedx-rename.md](docs/release-notes/seedx-rename.md)
 
-各コンポーネントは、複雑性を増やす前に、それ自体が load-bearing であることを示す必要があります。
-
----
-
-## 設計判断
-
-詳しくは [docs/adr/0001-question-to-mastery-architecture.md](docs/adr/0001-question-to-mastery-architecture.md) を参照してください。
+Contact: [@CaoYuhaoCarl](https://x.com/CaoYuhaoCarl) · WeChat `caoyuhaocarl`
