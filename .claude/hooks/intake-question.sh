@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
-# Question-to-Mastery intake hook
+# SeedX intake hook
 #
-# Routes UserPromptSubmit prompts into the Question-to-Mastery flow:
+# Routes UserPromptSubmit prompts into the SeedX flow:
 #   +ask                 → launch pending inline question, or read clipboard/save/launch
 #   +ask <body>          → save body, BLOCK original prompt, await bare +ask
 #   +ask:<body>          → same as +ask <body>
 #   +ask：<body>         → same as +ask <body> (Chinese full-width colon)
 #   +ask-strict <body>   → same as inline +ask body
 #   +start [path]        → launch from given path, or most recent question file
-#   qtm <body>           → save body and launch
-#   用 qtm 调研问题：<body> → save body and launch
+#   seedx <body>         → save body and launch
+#   seed <body>          → save body and launch
+#   sx <body>            → save body and launch
+#   qtm <body>           → legacy alias; save body and launch
+#   用 seedx 调研问题：<body> → save body and launch
+#   用 qtm 调研问题：<body>   → legacy alias; save body and launch
 #
 # Anything else is passed through untouched.
 #
@@ -61,7 +65,7 @@ emit_launch() {
   jq -n --arg p "$rel_path" --arg cwd "$CWD" '{
     hookSpecificOutput: {
       hookEventName: "UserPromptSubmit",
-      additionalContext: ("HARNESS_LAUNCH_TRIGGER\n学习问题路径：\($p)\n\n请严格按当前工作区 CLAUDE.md 执行：\n- 当前用户消息是 harness 触发器，不是普通问答请求；不要直接回答、总结或解决原始学习问题\n- 当前工作区：\($cwd)\n- 立即进入 Question-to-Mastery 编排流程；主 Agent 只初始化、调度、记录状态，不生产学习产物\n- 学习问题路径作为输入；handoff prompt 必须使用 §7 模板，严禁在 subagent prompt 中复述、改写或引用问题正文\n- 不得把输出目录设置为输入文件所在文件夹\n- 默认保持通用学习者视角；只有输入文件显式提供的背景、目标、场景和约束才能进入 learning-contract 与产物\n- 初始化后创建 README.md、_run/run-log.md、_run/events.jsonl、_run/state.json，由主 Agent 启动 Harness Visualizer 并记录 visualizer_started，然后启动 question-planner subagent")
+      additionalContext: ("HARNESS_LAUNCH_TRIGGER\n学习问题路径：\($p)\n\n请严格按当前工作区 CLAUDE.md 执行：\n- 当前用户消息是 harness 触发器，不是普通问答请求；不要直接回答、总结或解决原始学习问题\n- 当前工作区：\($cwd)\n- 立即进入 SeedX 编排流程；主 Agent 只初始化、调度、记录状态，不生产学习产物\n- 学习问题路径作为输入；handoff prompt 必须使用 §7 模板，严禁在 subagent prompt 中复述、改写或引用问题正文\n- 不得把输出目录设置为输入文件所在文件夹\n- 默认保持通用学习者视角；只有输入文件显式提供的背景、目标、场景和约束才能进入 learning-contract 与产物\n- 初始化后创建 README.md、_run/run-log.md、_run/events.jsonl、_run/state.json，由主 Agent 启动 Harness Visualizer 并记录 visualizer_started，然后启动 question-planner subagent")
     }
   }'
 }
@@ -119,31 +123,36 @@ consume_pending_ask() {
 # s|...|...| delimiter.
 strip_prefix() {
   local prefix="$1"
-  printf '%s' "$PROMPT" | perl -0777 -pe "s|^\\Q${prefix}\\E[\\s:：]+||"
+  printf '%s' "$PROMPT" | perl -CS -0777 -pe "use utf8; s|^\\Q${prefix}\\E[\\s:\\x{FF1A}]+||"
 }
 
-extract_natural_qtm_body() {
-  printf '%s' "$PROMPT" | perl -0777 -ne '
-    if (/^\s*(?:用\s*)?qtm\s*(?:(?:调研|研究|学习|处理|分析)\s*)?问题\s*[:：]\s*(\S[\s\S]*)$/i) {
+extract_natural_launcher_body() {
+  printf '%s' "$PROMPT" | perl -CS -0777 -ne '
+    use utf8;
+    my $alias = qr/(?:qtm|seedx|seed|sx)/i;
+    if (/^\s*(?:用\s*)?$alias\s*(?:(?:调研|研究|学习|处理|分析)\s*)?问题\s*[:\x{FF1A}]\s*(\S[\s\S]*)$/i) {
       print $1;
       exit;
     }
-    if (/^\s*qtm\s+(\S[\s\S]*)$/i) {
+    if (/^\s*$alias\s+(\S[\s\S]*)$/i) {
       print $1;
     }
   '
 }
 
 # ---------------------------------------------------------------------------
-# Chinese natural-language launcher:
-#   qtm <body>
-#   用 qtm 调研问题：<body>
-#   用 QTM 研究问题:<body>
+# Natural-language launchers:
+#   seedx <body>
+#   seed <body>
+#   sx <body>
+#   qtm <body> (legacy)
+#   用 seedx 调研问题：<body>
+#   用 QTM 研究问题:<body> (legacy)
 # These patterns are intentionally anchored so ordinary mentions pass through.
 # ---------------------------------------------------------------------------
-natural_qtm_body=$(extract_natural_qtm_body)
-if [[ -n "${natural_qtm_body//[[:space:]]/}" ]]; then
-  rel=$(save_body "$natural_qtm_body")
+natural_launcher_body=$(extract_natural_launcher_body)
+if [[ -n "${natural_launcher_body//[[:space:]]/}" ]]; then
+  rel=$(save_body "$natural_launcher_body")
   emit_launch "$rel"
   exit 0
 fi
@@ -232,5 +241,5 @@ if [[ "$PROMPT" =~ ^[+]start([[:space:]:：]|$) ]]; then
   exit 0
 fi
 
-# Not a Q2M trigger — pass through unchanged.
+# Not a SeedX trigger — pass through unchanged.
 exit 0

@@ -9,7 +9,8 @@
 ## 1. 核心原则
 
 0. **触发器不是问答请求**
-   - 当上下文中出现 `HARNESS_LAUNCH_TRIGGER`，或用户消息以 `+ask` / `+start` / `qtm <问题>` / `用 qtm ...问题：` 开头时，必须把本轮视为 harness 启动请求。
+   - 当上下文中出现 `HARNESS_LAUNCH_TRIGGER`，或用户消息以 `+ask` / `+start` / `seedx <问题>` / `seed <问题>` / `sx <问题>` / `qtm <问题>` / `用 seedx ...问题：` / `用 seed ...问题：` / `用 sx ...问题：` / `用 qtm ...问题：` 开头时，必须把本轮视为 harness 启动请求。
+   - `qtm` 是 legacy trigger，必须继续兼容；`seedx`、`seed`、`sx` 是 SeedX 新 trigger，均按大小写不敏感处理。
    - 主 Agent 不得直接回答、总结、解释或解决原始学习问题。
    - 必须按注入的学习问题路径初始化运行目录，并从 `question-planner` 开始编排。
 
