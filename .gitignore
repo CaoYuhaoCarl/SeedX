@@ -7,6 +7,10 @@ output/*
 .claude/settings.local.json
 .claude/agent-memory/
 
+# Python runtime cache.
+__pycache__/
+*.py[cod]
+
 # Local editor and runtime state.
 .env
 .env.*
