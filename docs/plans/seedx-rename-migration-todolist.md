@@ -144,13 +144,13 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
   - `tools/derive-project-name.py`
   - `tools/open-visualizer.sh`
   - `.claude/hooks/intake-question.sh`
-- [ ] Update `.claude/agents/*.md` and `.claude/skills/*.md` descriptions from
+- [x] Update `.claude/agents/*.md` and `.claude/skills/*.md` descriptions from
   Question-to-Mastery to SeedX where they describe the product.
-- [ ] Update `.agents/skills/*.md` copies in the same way, if they are meant to
+- [x] Update `.agents/skills/*.md` copies in the same way, if they are meant to
   stay mirrored.
-- [ ] Keep task IDs and artifact paths unchanged:
+- [x] Keep task IDs and artifact paths unchanged:
   `task01`, `task02`, `task03`, `deliverables/`, `_agent/`, `_run/`.
-- [ ] Keep generated run titles stable unless a deliberate output-format version
+- [x] Keep generated run titles stable unless a deliberate output-format version
   bump is planned. If changed, update docs and visualizer assumptions together.
 
 ## Phase 6 - Runtime Output Compatibility

@@ -1,13 +1,13 @@
 ---
 name: designing-mastery-paths
 description: |
-  Question-to-Mastery 核心设计系统。定义好问题、Learning Contract、领域地图、
+  SeedX 核心设计系统。定义好问题、Learning Contract、领域地图、
   学习路径、练习任务、掌握检查、应用计划和迁移计划的设计标准。
 ---
 
 # designing-mastery-paths
 
-本 Skill 是 Question-to-Mastery Harness 的生成标准。Planner 和 Builder 必须以它为权威依据。
+本 Skill 是 SeedX Harness（前身为 Question-to-Mastery）的生成标准。Planner 和 Builder 必须以它为权威依据。
 
 ---
 

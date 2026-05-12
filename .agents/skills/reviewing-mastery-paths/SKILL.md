@@ -1,7 +1,7 @@
 ---
 name: reviewing-mastery-paths
 description: |
-  Question-to-Mastery 学习路径评估标准。用于独立评估学习产物是否覆盖充分、清晰、
+  SeedX 学习路径评估标准。用于独立评估学习产物是否覆盖充分、清晰、
   可执行，并能转化为输入中明确目标或通用应用场景下的行动。
 ---
 
