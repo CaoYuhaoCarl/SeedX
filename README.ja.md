@@ -4,7 +4,7 @@
 
 # SeedX
 
-<img src="https://img.shields.io/badge/version-v0.1_MVP-blue.svg" alt="Version v0.2 MVP">
+<img src="https://img.shields.io/badge/version-v0.2_MVP-blue.svg" alt="Version v0.2 MVP">
 <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
 <img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
 
