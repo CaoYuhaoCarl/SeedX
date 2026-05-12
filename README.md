@@ -170,7 +170,11 @@ Tasks run in the fixed order `task01 → task02 → task03`. Each task is built 
 │   └── specs/                       # Event protocol and log format specs
 ├── tools/
 │   ├── harness-visualizer.html      # Single-file visualization panel
-│   └── open-visualizer.sh           # One-command panel launcher
+│   ├── open-visualizer.sh           # One-command panel launcher
+│   ├── guard-private-config.py      # Commit-time repository hygiene guard
+│   └── install-git-hooks.sh         # Local hook installer
+├── .githooks/
+│   └── pre-commit                   # Runs the repository hygiene guard
 └── .claude/
     ├── agents/
     │   ├── question-planner.md
@@ -196,6 +200,8 @@ v0.2 adds a lightweight observability layer: it does not read learning artifact 
 ```
 
 See [docs/specs/harness-observability-events.md](docs/specs/harness-observability-events.md) for the event protocol and [docs/specs/run-log-format.md](docs/specs/run-log-format.md) for the log format.
+
+Repository hygiene rules live in [docs/specs/repository-hygiene.md](docs/specs/repository-hygiene.md).
 
 ---
 

@@ -7,6 +7,11 @@ output/*
 .claude/settings.local.json
 .claude/agent-memory/
 
-# Obsidian local state and plugin secrets.
-.obsidian/workspace.json
-.obsidian/plugins/*/data.json
+# Local editor and runtime state.
+.env
+.env.*
+!.env.example
+.obsidian/workspace*.json
+.obsidian/plugins/
+.obsidian/themes/
+.claudian/
