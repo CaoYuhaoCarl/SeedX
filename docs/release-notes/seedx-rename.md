@@ -9,7 +9,8 @@ Builder / Evaluator workflow remain unchanged.
 ## What Changed
 
 - New project name: `SeedX`.
-- New repository name: `CaoYuhaoCarl/SeedX`.
+- New repository name: `CaoYuhaoCarl/seedx`.
+- Repository, package, and URL identifiers should use lowercase `seedx`.
 - Recommended direct triggers: `seedx <question>`, `seed <question>`, and
   `sx <question>`.
 - Recommended private one-step flow: copy the question body, then send `+ask`.

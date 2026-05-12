@@ -6,7 +6,8 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
 ## Scope
 
 - New public name: `SeedX`
-- New repository name: `CaoYuhaoCarl/SeedX`
+- New repository name: `CaoYuhaoCarl/seedx`
+- Repository, package, and URL identifiers: lowercase `seedx`
 - Legacy public name: `Question-to-Mastery`
 - Legacy trigger that must keep working: `qtm` in any casing
 - Primary trigger families to support:
@@ -28,12 +29,12 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
 
 ## Phase 0 - Repository Identity
 
-- [x] Rename GitHub repo from `CaoYuhaoCarl/question-to-mastery` to `CaoYuhaoCarl/SeedX`.
-- [x] Update local `origin` remote to `https://github.com/CaoYuhaoCarl/SeedX.git`.
+- [x] Rename GitHub repo from `CaoYuhaoCarl/question-to-mastery` to `CaoYuhaoCarl/seedx`.
+- [x] Update local `origin` remote to `https://github.com/CaoYuhaoCarl/seedx.git`.
 - [ ] Decide whether the local checkout folder should remain
   `harness_question-to-mastery` for continuity or be renamed manually outside the
   repo after all open work is clean.
-- [ ] Update repository description if the public positioning should mention SeedX
+- [x] Update repository description if the public positioning should mention SeedX
   explicitly.
 - [ ] Check external references that may not follow GitHub redirects:
   bookmarks, docs links, README badges, package metadata, Vercel/GitHub Pages
@@ -196,8 +197,8 @@ to `SeedX`, while keeping `qtm` as a supported legacy trigger for existing users
   - visualizer starts or logs a non-blocking failure
 - [ ] Start one disposable harness run with `qtm <body>` and verify the same
   behavior.
-- [ ] Confirm `git remote -v` points to `CaoYuhaoCarl/SeedX`.
-- [ ] Confirm `gh repo view CaoYuhaoCarl/SeedX` resolves.
+- [x] Confirm `git remote -v` points to `CaoYuhaoCarl/seedx`.
+- [x] Confirm `gh repo view CaoYuhaoCarl/seedx` resolves.
 - [ ] Confirm README examples match the actual hook behavior.
 
 ## Suggested Implementation Order
