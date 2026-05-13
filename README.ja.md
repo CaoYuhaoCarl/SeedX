@@ -10,7 +10,7 @@
 
 <a href="README.md">🇺🇸 English</a> · <a href="README.zh-CN.md">🇨🇳 简体中文</a> · 🇯🇵 **日本語**
 
-<p><strong>すべてのアイデアは、ひとつのシステムへと育っていく。</strong></p>
+<p><img src="docs/assets/seedx-tagline-ja.svg" alt="すべてのアイデアは、ひとつのシステムへと育っていく。" width="640"></p>
 
 </div>
 
