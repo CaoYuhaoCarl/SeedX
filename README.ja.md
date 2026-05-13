@@ -162,4 +162,4 @@ SeedX は固定された 3 つのタスク単位を実行します。
 - アーキテクチャ決定: [docs/adr/0001-question-to-mastery-architecture.md](docs/adr/0001-question-to-mastery-architecture.md)
 - SeedX rename note: [docs/release-notes/seedx-rename.md](docs/release-notes/seedx-rename.md)
 
-Contact: [@CaoYuhaoCarl](https://x.com/CaoYuhaoCarl) · Telegram [@caoyuhaocarl](https://t.me/caoyuhaocarl) · WeChat `caoyuhaocarl`
+Contact: X [@CaoYuhaoCarl](https://x.com/CaoYuhaoCarl) · Telegram [@caoyuhaocarl](https://t.me/caoyuhaocarl) · WeChat `caoyuhaocarl`

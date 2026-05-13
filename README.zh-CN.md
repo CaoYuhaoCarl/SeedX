@@ -162,4 +162,4 @@ SeedX 固定执行三个任务单元：
 - 架构决策：[docs/adr/0001-question-to-mastery-architecture.md](docs/adr/0001-question-to-mastery-architecture.md)
 - SeedX 改名说明：[docs/release-notes/seedx-rename.md](docs/release-notes/seedx-rename.md)
 
-联系：[@CaoYuhaoCarl](https://x.com/CaoYuhaoCarl) · Telegram [@caoyuhaocarl](https://t.me/caoyuhaocarl) · 微信 `caoyuhaocarl`
+联系：X [@CaoYuhaoCarl](https://x.com/CaoYuhaoCarl) · Telegram [@caoyuhaocarl](https://t.me/caoyuhaocarl) · 微信 `caoyuhaocarl`
