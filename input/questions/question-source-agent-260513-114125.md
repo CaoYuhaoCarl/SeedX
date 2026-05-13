@@ -1,0 +1,1 @@
+如何做个agent系统可以试试盯discord中具体某个channel某个成员的发言？
