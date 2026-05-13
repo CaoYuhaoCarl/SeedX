@@ -164,4 +164,4 @@ For manually controlled runs, create a question file under `input/questions/`, t
 - Architecture decision: [docs/adr/0001-question-to-mastery-architecture.md](docs/adr/0001-question-to-mastery-architecture.md)
 - SeedX rename note: [docs/release-notes/seedx-rename.md](docs/release-notes/seedx-rename.md)
 
-Contact: [@CaoYuhaoCarl](https://x.com/CaoYuhaoCarl) · WeChat `caoyuhaocarl`
+Contact: [@CaoYuhaoCarl](https://x.com/CaoYuhaoCarl) · Telegram [@caoyuhaocarl](https://t.me/caoyuhaocarl) · WeChat `caoyuhaocarl`
