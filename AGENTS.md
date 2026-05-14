@@ -282,12 +282,14 @@ Repair loops depend on accurate Agent IDs.
 
 ### 6.1 Capture procedure
 
+**Runtime note**: §6 中的 Agent ID 捕获和同实例 resume 当前只在 Claude Code 下可用。Codex 不写 `agent-*.meta.json` 元数据文件，§6.2 的 resume 机制在 Codex 下不可用。Codex 用户在 §7 Step 2.3 修复循环失败时，应跳过 resume，按 `status = ⚠️` / `judgment = LOW_QUALITY_PASS` 降级并在 `_run/run-log.md` 中记录降级原因。Codex-native resume 机制是 roadmap v0.9 的待办项。
+
 Before launching each Builder / Evaluator, record launch time as `AGENT_LAUNCH_TS`.
 
-After subagent completion:
+After subagent completion (Claude Code only):
 
 ```bash
-python3 -c "import os, glob; print('\n'.join('{} {}'.format(os.path.getmtime(p), p) for p in glob.glob(os.path.expanduser('~/.Codex/projects/**/agent-*.meta.json'), recursive=True)))" | sort -rn | head -5
+python3 -c "import os, glob; print('\n'.join('{} {}'.format(os.path.getmtime(p), p) for p in glob.glob(os.path.expanduser('~/.claude/projects/**/agent-*.meta.json'), recursive=True)))" | sort -rn | head -5
 ```
 
 Select the newest meta file that satisfies:
