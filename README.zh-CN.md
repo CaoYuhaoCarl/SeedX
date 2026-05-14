@@ -4,11 +4,15 @@
 
 # SeedX
 
-<img src="https://img.shields.io/badge/version-v0.2_MVP-blue.svg" alt="Version v0.2 MVP">
-<img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
-<img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
+<p>
+  <img src="https://img.shields.io/badge/version-v0.2_MVP-blue.svg" alt="Version v0.2 MVP">
+  <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
+  <img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
+</p>
 
-<a href="README.md">🇺🇸 English</a> · 🇨🇳 **简体中文** · <a href="README.ja.md">🇯🇵 日本語</a>
+<br>
+
+<p><a href="README.md">🇺🇸 English</a> · 🇨🇳 <strong>简体中文</strong> · <a href="README.ja.md">🇯🇵 日本語</a></p>
 
 <h3 align="center">每颗想法，都能长出一个系统。</h3>
 
