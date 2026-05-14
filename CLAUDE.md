@@ -287,7 +287,7 @@ Before launching each Builder / Evaluator, record launch time as `AGENT_LAUNCH_T
 After subagent completion:
 
 ```bash
-find ~/.claude/projects/ -name "agent-*.meta.json" -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -5
+python3 -c "import os, glob; print('\n'.join('{} {}'.format(os.path.getmtime(p), p) for p in glob.glob(os.path.expanduser('~/.claude/projects/**/agent-*.meta.json'), recursive=True)))" | sort -rn | head -5
 ```
 
 Select the newest meta file that satisfies:
