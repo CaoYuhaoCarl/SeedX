@@ -5,7 +5,7 @@
 # SeedX
 
 <p>
-  <img src="https://img.shields.io/badge/version-v0.2_MVP-blue.svg" alt="Version v0.2 MVP">
+  <img src="https://img.shields.io/github/v/tag/CaoYuhaoCarl/seedx?label=version&amp;sort=semver&amp;color=blue" alt="Version">
   <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status Active">
   <img src="https://img.shields.io/badge/Architecture-Multi--agent-8a2be2" alt="Architecture Multi-agent">
 </p>
