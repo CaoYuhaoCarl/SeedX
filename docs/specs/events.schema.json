@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/CaoYuhaoCarl/seedx/docs/specs/events.schema.json",
+  "title": "SeedX Harness Event",
+  "description": "One line of _run/events.jsonl. Discriminated by `type`. See docs/specs/harness-observability-events.md for narrative.",
+  "type": "object",
+  "required": ["ts", "type"],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "pattern": "^\\d{6} \\d{6}$",
+      "description": "Timestamp in yymmdd hhmmss format."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "project_started",
+        "agent_started",
+        "agent_finished",
+        "task_status_changed",
+        "evaluation_finished",
+        "agent_resumed",
+        "visualizer_started",
+        "project_finished"
+      ]
+    }
+  },
+  "$defs": {
+    "task_id": {
+      "type": "string",
+      "pattern": "^task\\d{2}$|^planning$"
+    },
+    "role": {
+      "type": "string",
+      "enum": ["question-planner", "mastery-builder", "learning-evaluator"]
+    },
+    "judgment": {
+      "type": ["string", "null"],
+      "enum": ["PASS", "FAIL", "LOW_QUALITY_PASS", null]
+    },
+    "status_symbol": {
+      "type": "string",
+      "enum": ["📋", "✏️", "✅", "⚠️"]
+    },
+    "path_array": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "type": {"const": "project_started"},
+        "ts": {"$ref": "#/properties/ts"},
+        "project": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "output": {"type": "string", "minLength": 1}
+      },
+      "required": ["ts", "type", "project", "source", "output"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "type": {"const": "agent_started"},
+        "ts": {"$ref": "#/properties/ts"},
+        "role": {"$ref": "#/$defs/role"},
+        "task": {"$ref": "#/$defs/task_id"},
+        "instruction": {"type": "string"}
+      },
+      "required": ["ts", "type", "role", "task"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "type": {"const": "agent_finished"},
+        "ts": {"$ref": "#/properties/ts"},
+        "role": {"$ref": "#/$defs/role"},
+        "task": {"$ref": "#/$defs/task_id"},
+        "instance_id": {"type": "string", "minLength": 1},
+        "outputs": {"$ref": "#/$defs/path_array"}
+      },
+      "required": ["ts", "type", "role", "task"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "type": {"const": "task_status_changed"},
+        "ts": {"$ref": "#/properties/ts"},
+        "task": {"$ref": "#/$defs/task_id"},
+        "from": {"$ref": "#/$defs/status_symbol"},
+        "to": {"$ref": "#/$defs/status_symbol"},
+        "iterations": {"type": "integer", "minimum": 0},
+        "judgment": {"$ref": "#/$defs/judgment"}
+      },
+      "required": ["ts", "type", "task", "from", "to"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "type": {"const": "evaluation_finished"},
+        "ts": {"$ref": "#/properties/ts"},
+        "role": {"$ref": "#/$defs/role"},
+        "task": {"$ref": "#/$defs/task_id"},
+        "instance_id": {"type": "string", "minLength": 1},
+        "report": {"type": "string", "minLength": 1},
+        "judgment": {"$ref": "#/$defs/judgment"},
+        "round": {"type": "integer", "minimum": 0}
+      },
+      "required": ["ts", "type", "role", "task", "instance_id", "report", "judgment", "round"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "type": {"const": "agent_resumed"},
+        "ts": {"$ref": "#/properties/ts"},
+        "role": {"$ref": "#/$defs/role"},
+        "task": {"$ref": "#/$defs/task_id"},
+        "instance_id": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1},
+        "round": {"type": "integer", "minimum": 1},
+        "instruction": {"type": "string"}
+      },
+      "required": ["ts", "type", "role", "task", "instance_id", "reason", "round"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "type": {"const": "visualizer_started"},
+        "ts": {"$ref": "#/properties/ts"},
+        "project": {"type": "string", "minLength": 1},
+        "url": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "enum": ["ok", "failed"]},
+        "log": {"type": "string"},
+        "error": {"type": "string"}
+      },
+      "required": ["ts", "type", "project", "url", "status"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "type": {"const": "project_finished"},
+        "ts": {"$ref": "#/properties/ts"},
+        "project": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "enum": ["PASS", "LOW_QUALITY_PASS"]},
+        "duration": {"type": "string", "minLength": 1}
+      },
+      "required": ["ts", "type", "project", "status", "duration"],
+      "additionalProperties": false
+    }
+  ]
+}
