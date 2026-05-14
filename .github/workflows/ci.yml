@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test:
-    name: intake + guard + derive + validate-run
+    name: intake + guard + derive
     runs-on: macos-latest
     steps:
       - name: Checkout
