@@ -32,3 +32,6 @@ jobs:
           mkdir -p /tmp/seedx-ci
           printf 'AI agent memory question\n' > /tmp/seedx-ci/q.md
           python3 tools/derive-project-name.py /tmp/seedx-ci/q.md
+
+      - name: validate-run schema + protocol
+        run: bash tools/test-validate-run.sh

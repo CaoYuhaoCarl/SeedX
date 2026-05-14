@@ -192,6 +192,12 @@ Allowed metadata:
 
 ---
 
+## Validation
+
+`tools/validate-run.py {OUTPUT_DIR}` reads `_run/state.json` + `_run/events.jsonl`, checks them against `state.schema.json` / `events.schema.json`, and applies protocol checks (e.g. `evaluation_finished` must follow a matching `agent_started`). Exits non-zero on findings. CI runs `tools/test-validate-run.sh` against synthetic fixtures.
+
+---
+
 ## Viewer Requirements
 
 `tools/harness-visualizer.html` must work without a backend. First version supports local file upload of:
