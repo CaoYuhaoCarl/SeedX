@@ -10,7 +10,7 @@
 
 <a href="README.md">🇺🇸 English</a> · 🇨🇳 **简体中文** · <a href="README.ja.md">🇯🇵 日本語</a>
 
-<p><img src="docs/assets/seedx-tagline-zh.svg" alt="每颗想法，都能长出一个系统。" width="640"></p>
+<h3 align="center">每颗想法，都能长出一个系统。</h3>
 
 </div>
 

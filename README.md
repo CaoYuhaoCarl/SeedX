@@ -10,7 +10,7 @@
 
 🇺🇸 **English** · <a href="README.zh-CN.md">🇨🇳 简体中文</a> · <a href="README.ja.md">🇯🇵 日本語</a>
 
-<p><img src="docs/assets/seedx-tagline-en.svg" alt="Every idea can grow into a system." width="640"></p>
+<h3 align="center"><em>Every idea can grow into a system.</em></h3>
 
 </div>
 
