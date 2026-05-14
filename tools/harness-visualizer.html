@@ -320,6 +320,7 @@
     .tl-event .role.planner{color:var(--violet)}
     .tl-event .role.main   {color:var(--cyan)}
     .tl-event .det{color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .tl-event .det .schema-error{color:var(--amber);font-weight:600}
 
     /* ===== Agent instances table ===== */
     .agents-wrap{overflow-x:auto}
@@ -485,8 +486,45 @@ const taskDefaults = {
 const escapeHtml = s => String(s??'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fileName = p => String(p||'').split('/').filter(Boolean).pop() || String(p||'—');
 const truncate = (s, n) => String(s||'').length > n ? String(s||'').slice(0,n) + '…' : s;
+// Denormalized rules from docs/specs/events.schema.json; keep in sync with that file.
+const EVENT_REQUIRED = {
+  project_started:    ['ts','project','source','output'],
+  agent_started:      ['ts','role','task'],
+  agent_finished:     ['ts','role','task'],
+  task_status_changed:['ts','task','from','to'],
+  evaluation_finished:['ts','role','task','instance_id','report','judgment','round'],
+  agent_resumed:      ['ts','role','task','instance_id','reason','round'],
+  visualizer_started: ['ts','project','url','status'],
+  project_finished:   ['ts','project','status','duration'],
+};
+const ROLE_ENUM     = new Set(['question-planner','mastery-builder','learning-evaluator']);
+const JUDGMENT_ENUM = new Set(['PASS','FAIL','LOW_QUALITY_PASS']);
+const STATUS_ENUM   = new Set(['📋','✏️','✅','⚠️']);
+const TS_RE   = /^\d{6} \d{6}$/;
+const TASK_RE = /^(task\d{2}|planning)$/;
+
+function validateEvent(ev){
+  const errs = [];
+  if(typeof ev.ts !== 'string' || !TS_RE.test(ev.ts)) errs.push("ts missing or not 'yymmdd hhmmss'");
+  if(!EVENT_REQUIRED[ev.type]){ errs.push(`unknown type '${ev.type}'`); return errs; }
+  for(const f of EVENT_REQUIRED[ev.type]) if(ev[f] === undefined) errs.push(`missing required field '${f}'`);
+  if(ev.role !== undefined && !ROLE_ENUM.has(ev.role)) errs.push(`role '${ev.role}' not in role enum`);
+  if(ev.judgment !== undefined && ev.judgment !== null && !JUDGMENT_ENUM.has(ev.judgment)) errs.push(`judgment '${ev.judgment}' not in judgment enum`);
+  if(ev.from !== undefined && !STATUS_ENUM.has(ev.from)) errs.push(`from '${ev.from}' not a status emoji`);
+  if(ev.to   !== undefined && !STATUS_ENUM.has(ev.to))   errs.push(`to '${ev.to}' not a status emoji`);
+  if(ev.task !== undefined && !TASK_RE.test(ev.task))   errs.push(`task '${ev.task}' not matching ^(task\\d{2}|planning)$`);
+  return errs;
+}
+
 const parseJsonl = text => text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map((line,i)=>{
-  try{ return {...JSON.parse(line), _idx:i}; }catch(e){ return {ts:'?',type:'parse_error',error:e.message,line:i+1,raw:line,_idx:i}; }
+  let ev;
+  try{ ev = JSON.parse(line); }
+  catch(e){ return {ts:'?',type:'parse_error',error:e.message,line:i+1,raw:line,_idx:i}; }
+  const schemaErrors = validateEvent(ev);
+  ev._idx = i;
+  ev._line = i+1;
+  if(schemaErrors.length) ev._schemaErrors = schemaErrors;
+  return ev;
 });
 const orderedEvents = () => [...events].sort((a,b)=>String(a.ts||'').localeCompare(String(b.ts||'')) || ((a._idx??0)-(b._idx??0)));
 
@@ -1159,8 +1197,11 @@ function renderPipeline(s){
 const TYPE_ICON = {
   'project_started':'▶','project_finished':'■',
   'agent_started':'▷','agent_finished':'✓','agent_resumed':'↺',
-  'evaluation_finished':'⚖','task_status_changed':'◆','parse_error':'⚠'
+  'evaluation_finished':'⚖','task_status_changed':'◆',
+  'visualizer_started':'◉',
+  'parse_error':'⚠'
 };
+const iconFor = ev => TYPE_ICON[ev.type] || (ev._schemaErrors ? '⚠' : '·');
 
 function eventGroup(ev){
   if(ev.type==='project_started' || ev.type==='project_finished') return 'project';
@@ -1179,6 +1220,7 @@ function eventRoleClass(ev){
 function eventDescription(ev){
   if(ev.type==='parse_error') return `line ${ev.line}: ${ev.error}`;
   const parts = [];
+  if(ev._schemaErrors) parts.push(`<strong class="schema-error">⚠ schema: ${escapeHtml(ev._schemaErrors.join('; '))}</strong>`);
   if(ev.judgment)     parts.push(`<strong>${escapeHtml(ev.judgment)}</strong>`);
   if(ev.round != null) parts.push(`round=${ev.round}`);
   if(ev.outputs)      parts.push(`${ev.outputs.length} outputs`);
@@ -1220,7 +1262,7 @@ function renderTimeline(s){
 
     const rows = groups[g].map(ev => {
       const role = eventRoleClass(ev);
-      const icon = TYPE_ICON[ev.type] || '•';
+      const icon = iconFor(ev);
       return `<div class="tl-event">
         <span class="ts">${escapeHtml(ev.ts||'')}</span>
         <span class="ic">${icon}</span>
