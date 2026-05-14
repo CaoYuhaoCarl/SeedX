@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/CaoYuhaoCarl/seedx/docs/specs/state.schema.json",
+  "title": "SeedX Harness Run State",
+  "description": "_run/state.json — overwritten on every meaningful state transition. See docs/specs/harness-observability-events.md for narrative.",
+  "type": "object",
+  "required": [
+    "project",
+    "source",
+    "output",
+    "phase",
+    "current_task",
+    "updated_at",
+    "tasks",
+    "discipline"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "project": {"type": "string", "minLength": 1},
+    "source": {"type": "string", "minLength": 1},
+    "output": {"type": "string", "minLength": 1},
+    "phase": {
+      "type": "string",
+      "enum": ["initialized", "planning", "planned", "task_loop", "finished"]
+    },
+    "current_task": {
+      "type": ["string", "null"],
+      "pattern": "^task\\d{2}$"
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^\\d{6} \\d{6}$"
+    },
+    "tasks": {
+      "type": "object",
+      "required": ["task01", "task02", "task03"],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^task\\d{2}$": {"$ref": "#/$defs/task"}
+      }
+    },
+    "discipline": {
+      "type": "object",
+      "required": [
+        "main_read_source_body",
+        "main_read_builder_deliverables",
+        "main_read_full_evaluation_reports",
+        "same_task_builder_resume_required",
+        "same_task_evaluator_resume_required",
+        "personalization_source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "main_read_source_body": {"type": "boolean"},
+        "main_read_builder_deliverables": {"type": "boolean"},
+        "main_read_full_evaluation_reports": {"type": "boolean"},
+        "same_task_builder_resume_required": {"type": "boolean"},
+        "same_task_evaluator_resume_required": {"type": "boolean"},
+        "personalization_source": {
+          "type": "string",
+          "enum": ["explicit_input_only"]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "task": {
+      "type": "object",
+      "required": [
+        "title",
+        "status",
+        "builder_id",
+        "evaluator_id",
+        "iterations",
+        "judgment",
+        "outputs",
+        "report"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "status": {
+          "type": "string",
+          "enum": ["📋", "✏️", "✅", "⚠️"]
+        },
+        "builder_id": {"type": ["string", "null"], "minLength": 1},
+        "evaluator_id": {"type": ["string", "null"], "minLength": 1},
+        "iterations": {"type": "integer", "minimum": 0},
+        "judgment": {
+          "type": ["string", "null"],
+          "enum": ["PASS", "FAIL", "LOW_QUALITY_PASS", null]
+        },
+        "outputs": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1
+        },
+        "report": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
